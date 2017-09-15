@@ -16,3 +16,4 @@ Route::get('/', function () {
 });
 
 Route::get('/grab_marketing_stat', 'grabMarketingStat@grab');
+Route::get('/garb_google_analytics_reports', 'GrabDimensionsFromAnalyticsController@grab');
