@@ -10,6 +10,7 @@ use Google_Service_AnalyticsReporting_GetReportsRequest;
 use Google_Service_AnalyticsReporting_Metric;
 use Google_Service_AnalyticsReporting_ReportRequest;
 use Google_Service_Sheets;
+use Google_Service_Sheets_ClearValuesRequest;
 use Google_Service_Sheets_ValueRange;
 
 class GrabDimensionsFromAnalyticsController extends Controller
@@ -17,6 +18,12 @@ class GrabDimensionsFromAnalyticsController extends Controller
     protected $VIEW_ID = '101383010';
     
     protected $GOOGLE_SHEETS_ID = '1i1_0ewGNcXekSpLRx_C8UnKMOpHZMzHAZl7M0XDbL_I';
+    
+    protected $GOOGLE_SHEETS_RANGE = 'A1:Z';
+    
+    protected $GOOGLE_SHEETS_DEFAULT_ROW = 1;
+    
+    protected $GOOGLE_SHEETS_CURRENT_ROW = 1;
     
     protected $dimensions = [
         'ga:dimension1' => 'Category',
@@ -65,64 +72,86 @@ class GrabDimensionsFromAnalyticsController extends Controller
         return $analytics->reports->batchGet($body);
     }
     
-    function printResults($reports)
+    protected function clearSheet($service)
     {
-        for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
-            $report           = $reports[$reportIndex];
-            $header           = $report->getColumnHeader();
-            $dimensionHeaders = $header->getDimensions();
-            $metricHeaders    = $header->getMetricHeader()->getMetricHeaderEntries();
-            $rows             = $report->getData()->getRows();
-            
-            for ($rowIndex = 0; $rowIndex < count($rows); $rowIndex++) {
-                $row        = $rows[$rowIndex];
-                $dimensions = $row->getDimensions();
-                $metrics    = $row->getMetrics();
-                for ($i = 0; $i < count($dimensionHeaders) && $i < count($dimensions); $i++) {
-                    print($dimensionHeaders[$i] . ": " . $dimensions[$i] . "\n");
-                }
-                
-                for ($j = 0; $j < count($metricHeaders) && $j < count($metrics); $j++) {
-                    $entry  = $metricHeaders[$j];
-                    $values = $metrics[$j];
-                    print("Metric type: " . $entry->getType() . "<br>");
-                    for ($valueIndex = 0; $valueIndex < count($values->getValues()); $valueIndex++) {
-                        $value = $values->getValues()[$valueIndex];
-                        print($entry->getName() . ": " . $value . "<br>");
-                    }
-                }
-            }
-        }
+        $requestBody = new Google_Service_Sheets_ClearValuesRequest();
+        
+        $response                        = $service->spreadsheets_values->clear($this->GOOGLE_SHEETS_ID,
+            $this->GOOGLE_SHEETS_RANGE, $requestBody);
+        $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_DEFAULT_ROW;
+        
+        return $response;
     }
     
-    function setToSheet($report, $sheet)
+    protected function addClearRowToSheet($service)
     {
-        for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
-            $report           = $reports[$reportIndex];
-            $header           = $report->getColumnHeader();
-            $dimensionHeaders = $header->getDimensions();
-            $metricHeaders    = $header->getMetricHeader()->getMetricHeaderEntries();
-            $rows             = $report->getData()->getRows();
-            
-            for ($rowIndex = 0; $rowIndex < count($rows); $rowIndex++) {
-                $row        = $rows[$rowIndex];
-                $dimensions = $row->getDimensions();
-                $metrics    = $row->getMetrics();
-                for ($i = 0; $i < count($dimensionHeaders) && $i < count($dimensions); $i++) {
-                    print($dimensionHeaders[$i] . ": " . $dimensions[$i] . "\n");
+        $body      = new Google_Service_Sheets_ValueRange(array(
+            'values' => [],
+        ));
+        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
+        $optParams = ["valueInputOption" => "USER_ENTERED"];
+        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
+        if ($result) {
+            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + 1;
+        }
+        
+        return $result;
+    }
+    
+    protected function setToSheet($service, $spreadsheetRows)
+    {
+        $body      = new Google_Service_Sheets_ValueRange(array(
+            'values' => $spreadsheetRows,
+        ));
+        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
+        $optParams = ["valueInputOption" => "USER_ENTERED"];
+        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
+        if ($result) {
+            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + count($spreadsheetRows);
+        }
+        
+        return $result;
+    }
+    
+    protected function getReportRows($report)
+    {
+        $reportRows        = [];
+        $header            = $report->getColumnHeader();
+        $dimensionHeaders  = $header->getDimensions();
+        $metricHeaders     = $header->getMetricHeader()->getMetricHeaderEntries();
+        $rows              = $report->getData()->getRows();
+        $reportRowsHeaders = [];
+        if (!empty($header)) {
+            array_push($reportRowsHeaders, $header[0] . ' name: ' . $this->dimensions[$header[0]]);
+        }
+        foreach ($metricHeaders as $metricHeader) {
+            array_push($reportRowsHeaders, 'Metric name: ' . $metricHeader->name);
+        }
+        
+        array_push($reportRows, $reportRowsHeaders);
+        
+        foreach ($rows as $index => $row) {
+            $reportRow = [];
+            if (!empty($row->dimensions)) {
+                foreach ($row->dimensions as $dimension) {
+                    array_push($reportRow, $dimension);
                 }
-                
-                for ($j = 0; $j < count($metricHeaders) && $j < count($metrics); $j++) {
-                    $entry  = $metricHeaders[$j];
-                    $values = $metrics[$j];
-                    print("Metric type: " . $entry->getType() . "<br>");
-                    for ($valueIndex = 0; $valueIndex < count($values->getValues()); $valueIndex++) {
-                        $value = $values->getValues()[$valueIndex];
-                        print($entry->getName() . ": " . $value . "<br>");
+            }
+            $metrics = $row->getMetrics();
+            if (!empty($metrics)) {
+                foreach ($metrics as $metric) {
+                    $metricValues = $metric->getValues();
+                    if (!empty($metricValues)) {
+                        foreach ($metricValues as $metricValue) {
+                            array_push($reportRow, $metricValue);
+                        }
                     }
                 }
             }
+            array_push($reportRows, $reportRow);
         }
+        
+        return $reportRows;
     }
     
     public function grab()
@@ -144,57 +173,14 @@ class GrabDimensionsFromAnalyticsController extends Controller
         
         $serviceSheets = new Google_Service_Sheets($client->client);
         
-        
-        $values = array(
-            array(
-                // Cell values ...
-                'cell1',
-                'cell2',
-                'cell3',
-            ),
-            // Additional rows ...
-            'row1',
-            'row2',
-            'row3',
-        );
-        $body   = new Google_Service_Sheets_ValueRange(array(
-            'values' => $values,
-        ));
-        $body   = new Google_Service_Sheets_ValueRange();
-        $range  = 'A2:M23';
-        // Create the value range Object
-        $valueRange = new Google_Service_Sheets_ValueRange();
-        
-        $asSpreadsheetRows = [
-            [
-                "Mickey",
-                "Mouse " . rand(11111, 99999),
-            ],
-            [
-                "Donald",
-                "Duck",
-            ],
-        ];
-        $body              = new Google_Service_Sheets_ValueRange(array(
-            'values' => $asSpreadsheetRows,
-        ));
-        // Then you need to add some configuration
-        // $conf   = ["valueInputOption" => "RAW"];
-        $optParams   = ["valueInputOption" => "USER_ENTERED"];
-        $result = $serviceSheets->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
-        dd($result);
-        
-        $responseSheet = $serviceSheets->spreadsheets_values->get($this->GOOGLE_SHEETS_ID, $range);
+        $this->clearSheet($serviceSheets);
         
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
         foreach ($this->dimensions as $dimension => $name) {
             $responseAnalyticsReport = $this->getReport($serviceAnalytics, $this->VIEW_ID, $dimension);
-            $this->setToSheet($responseAnalyticsReport, $responseSheet);
-            
-            dd($this->VIEW_ID, $dimension, $name, $responseAnalyticsReport, $responseSheet);
+            $spreadsheetRows         = $this->getReportRows($responseAnalyticsReport[0]);
+            $this->setToSheet($serviceSheets, $spreadsheetRows);
+            $this->addClearRowToSheet($serviceSheets);
         }
-        
-        // $this->printResults($response);
-        
     }
 }
