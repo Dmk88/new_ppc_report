@@ -30,6 +30,8 @@ class GrabDimensionsFromAnalyticsController extends Controller
     
     protected $GOOGLE_REPORT_END_DATE = "today";
     
+    protected $GOOGLE_REPORT_METRIC_TIME_TYPE = "TIME";
+    
     protected $dimensions = [
         'ga:dimension1' => 'Category',
         'ga:dimension2' => 'Tag',
@@ -75,6 +77,11 @@ class GrabDimensionsFromAnalyticsController extends Controller
         $body->setReportRequests(array($request));
         
         return $analytics->reports->batchGet($body);
+    }
+    
+    protected function getTimeFromSeconds($seconds)
+    {
+        return gmdate('H:i:s', $seconds);
     }
     
     protected function clearSheet($service)
@@ -145,7 +152,7 @@ class GrabDimensionsFromAnalyticsController extends Controller
             array_push($reportRowsHeaders, $header[0] . ' name: ' . $this->dimensions[$header[0]]);
         }
         foreach ($metricHeaders as $metricHeader) {
-            array_push($reportRowsHeaders, 'Metric name: ' . $metricHeader->name);
+            array_push($reportRowsHeaders, 'Metric name: ' . $metricHeader->name . ' [' . $metricHeader->type . ']');
         }
         
         array_push($reportRows, $reportRowsHeaders);
@@ -162,7 +169,10 @@ class GrabDimensionsFromAnalyticsController extends Controller
                 foreach ($metrics as $metric) {
                     $metricValues = $metric->getValues();
                     if (!empty($metricValues)) {
-                        foreach ($metricValues as $metricValue) {
+                        foreach ($metricValues as $number => $metricValue) {
+                            if ($metricHeaders[$number]->type === $this->GOOGLE_REPORT_METRIC_TIME_TYPE) {
+                                $metricValue = $this->getTimeFromSeconds($metricValue);
+                            }
                             array_push($reportRow, $metricValue);
                         }
                     }
