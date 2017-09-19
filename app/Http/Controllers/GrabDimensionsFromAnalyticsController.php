@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Api\GoogleClient;
+use Carbon\Carbon;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_AnalyticsReporting_DateRange;
@@ -25,6 +26,10 @@ class GrabDimensionsFromAnalyticsController extends Controller
     
     protected $GOOGLE_SHEETS_CURRENT_ROW = 1;
     
+    protected $GOOGLE_REPORT_START_DATE = "7daysAgo";
+    
+    protected $GOOGLE_REPORT_END_DATE = "today";
+    
     protected $dimensions = [
         'ga:dimension1' => 'Category',
         'ga:dimension2' => 'Tag',
@@ -34,8 +39,8 @@ class GrabDimensionsFromAnalyticsController extends Controller
     function getReport($analytics, $viewID = '101383010', $dimensionName = 'ga:dimension1')
     {
         $dateRange = new Google_Service_AnalyticsReporting_DateRange();
-        $dateRange->setStartDate("7daysAgo");
-        $dateRange->setEndDate("today");
+        $dateRange->setStartDate($this->GOOGLE_REPORT_START_DATE);
+        $dateRange->setEndDate($this->GOOGLE_REPORT_END_DATE);
         
         $sessions = new Google_Service_AnalyticsReporting_Metric();
         $sessions->setExpression("ga:sessions");
@@ -113,6 +118,21 @@ class GrabDimensionsFromAnalyticsController extends Controller
         return $result;
     }
     
+    protected function setReportToSheet($service, $spreadsheetRows)
+    {
+        $body      = new Google_Service_Sheets_ValueRange(array(
+            'values' => $spreadsheetRows,
+        ));
+        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
+        $optParams = ["valueInputOption" => "USER_ENTERED"];
+        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
+        if ($result) {
+            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + count($spreadsheetRows);
+        }
+        
+        return $result;
+    }
+    
     protected function getReportRows($report)
     {
         $reportRows        = [];
@@ -174,6 +194,15 @@ class GrabDimensionsFromAnalyticsController extends Controller
         $serviceSheets = new Google_Service_Sheets($client->client);
         
         $this->clearSheet($serviceSheets);
+        $dates = [
+            [
+                'Start date: ' . (new Carbon($this->GOOGLE_REPORT_START_DATE))->format('M d, Y'),
+                'End date: ' . (new Carbon($this->GOOGLE_REPORT_END_DATE))->format('M d, Y'),
+            ],
+        ];
+        $this->setToSheet($serviceSheets, $dates);
+        
+        $this->addClearRowToSheet($serviceSheets);
         
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
         foreach ($this->dimensions as $dimension => $name) {

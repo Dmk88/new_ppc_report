@@ -11,6 +11,7 @@
         "googleads/googleads-php-lib": "^29.0",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
+        "nesbot/carbon": "^1.22",
         "phpdocumentor/reflection-docblock": "^3.0.3"
     },
     "require-dev": {
