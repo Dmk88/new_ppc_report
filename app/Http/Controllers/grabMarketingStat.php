@@ -113,11 +113,11 @@ class grabMarketingStat extends Controller
         )));
     
         // Generate a refreshable OAuth2 credential for authentication.
-        $oAuth2Credential = (new OAuth2TokenBuilder())->fromFile(app_path() . ADSAPI)->build();
+        $oAuth2Credential = (new OAuth2TokenBuilder())->fromFile(app_path() . $_ENV['ADSAPI'])->build();
         // Construct an API session configured from a properties file and the OAuth2
         // credentials above.
         // dd($oAuth2Credential);
-        $session = (new AdWordsSessionBuilder())->fromFile(app_path() . ADSAPI)->withOAuth2Credential($oAuth2Credential)->build();
+        $session = (new AdWordsSessionBuilder())->fromFile(app_path() . $_ENV['ADSAPI'])->withOAuth2Credential($oAuth2Credential)->build();
     
         $adWordsServices = new AdWordsServices();
         $campaignService = $adWordsServices->get($session, CampaignService::class);
