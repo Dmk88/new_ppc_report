@@ -70,7 +70,7 @@ class GrabDimensionsFromAnalyticsController extends Controller
         $request = new Google_Service_AnalyticsReporting_ReportRequest();
         $request->setViewId($viewID);
         $request->setDateRanges($dateRange);
-        $request->setMetrics(array($sessions, $pageviews, $newUsers, $bounceRate, $avgSessionDuration));
+        $request->setMetrics(array($sessions, $newUsers, $bounceRate, $avgSessionDuration));
         $request->setDimensions($dimension);
         
         $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
