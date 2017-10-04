@@ -111,32 +111,41 @@ class grabMarketingStat extends Controller
         // Create selector.
         $selector = new Selector();
         $selector->setFields(['Impressions', 'Clicks', 'Cost']);
-        
+
         // Use a predicate to filter out paused criteria (this is optional).
         $selector->setPredicates([
             new Predicate('Status', PredicateOperator::NOT_IN, ['PAUSED'])]);
                 // Create report definition.
         $reportDefinition = new ReportDefinition();
+
         $reportDefinition->setSelector($selector);
         $reportDefinition->setReportName(
             'Criteria performance report #' . uniqid());
         $reportDefinition->setDateRangeType(
             ReportDefinitionDateRangeType::LAST_MONTH);
+
         $reportDefinition->setReportType(
             ReportDefinitionReportType::CRITERIA_PERFORMANCE_REPORT);
         $reportDefinition->setDownloadFormat(DownloadFormat::XML);
         
         // Download report.
         $reportDownloader = new ReportDownloader($session);
+        //dd($session);
         // Optional: If you need to adjust report settings just for this one
         // request, you can create and supply the settings override here. Otherwise,
         // default values from the configuration file (adsapi_php.ini) are used.
         $reportSettingsOverride = (new ReportSettingsBuilder())
             ->includeZeroImpressions(false)
             ->build();
+//        echo"<pre>";
+////        var_dump($reportDefinition);
+////        var_dump($reportSettingsOverride);
+////        dd($reportDefinition);
         $reportDownloadResult = $reportDownloader->downloadReport(
             $reportDefinition, $reportSettingsOverride);
+
         $reportDownloadResult->saveToFile($filePath);
+
         printf("Report with name '%s' was downloaded to '%s'.\n",
             $reportDefinition->getReportName(), $filePath);
     }
@@ -175,6 +184,7 @@ clientCustomerId = "413-024-1238"
         // $oAuth2Credential = (new OAuth2TokenBuilder())->fromFile(app_path() . $_ENV['ADSAPI'])->build();
         $OAuth2TokenBuilder  = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
+
         $config_str = sprintf($config_str,
             '-1eyB_C3TMVQ1JL8yGqSIg', '413-024-1238',
             '927812699630-q4it23e1tglhnjjid9jftqf4crbjcl6l.apps.googleusercontent.com');
@@ -184,28 +194,36 @@ clientCustomerId = "413-024-1238"
         // credentials above.
         // dd($oAuth2Credential);
         $session = (new AdWordsSessionBuilder())->fromFile(app_path() . $_ENV['ADSAPI'])->withOAuth2Credential($oAuth2Credential)->build();
+
         // self::runExample(new AdWordsServices(), $session);
         $filePath = 'criteria-report.csv';
+
         self::runExample2( $session,$filePath);
+
         exit;
-        
-        
+
         $adWordsServices = new AdWordsServices();
         $campaignService = $adWordsServices->get($session, CampaignService::class);
         // dd($campaignService);
         // Create selector.
         $selector = new Selector();
+
         $selector->setFields(['Id', 'Name']);
         $selector->setOrdering([new OrderBy('Name', SortOrder::ASCENDING)]);
         $selector->setPaging(new Paging(0, self::PAGE_LIMIT));
         $totalNumEntries = 0;
+
+
         do {
             // Make the get request.
+
             $page = $campaignService->get($selector);
             // Display results.
             if ($page->getEntries() !== null) {
+
                 $totalNumEntries = $page->getTotalNumEntries();
                 foreach ($page->getEntries() as $campaign) {
+
                     printf("Campaign with ID %d and name '%s' was found.\n", $campaign->getId(), $campaign->getName());
                 }
             }
@@ -219,10 +237,12 @@ clientCustomerId = "413-024-1238"
         // $this->main();
         // // dd('ddd');
     }
+    //**************LINKEDIN***********
     public function grabLinkedin(){
-        echo "<pre>";
+        // *************Login***********
         $linkedIn=new \Happyr\LinkedIn\LinkedIn('78ruqha4he57aa', 'Ai3zGFNAV6cpYKxO');
-        var_dump($linkedIn);
+        $linkedIn->setHttpClient(new \Http\Adapter\Guzzle6\Client());
+        $linkedIn->setHttpMessageFactory(new \Http\Message\MessageFactory\GuzzleMessageFactory());
         if ($linkedIn->isAuthenticated()) {
             //we know that the user is authenticated now. Start query the API
             $user=$linkedIn->get('v1/people/~:(firstName,lastName)');
@@ -233,8 +253,33 @@ clientCustomerId = "413-024-1238"
             echo "User canceled the login.";
             exit();
         }
+
+        //if not authenticated
+        $url = $linkedIn->getLoginUrl();
+        echo "<a href='$url'>Login with LinkedIn</a>";
+
+        //****************Publish posts*************
+//        $linkedIn=new \Happyr\LinkedIn\LinkedIn('78ruqha4he57aa', 'Ai3zGFNAV6cpYKxO');
+//        $linkedIn->setHttpClient(new \Http\Adapter\Guzzle6\Client());
+//        $linkedIn->setHttpMessageFactory(new \Http\Message\MessageFactory\GuzzleMessageFactory());
+//        $linkedIn->setAccessToken('access_token_from_db');
+//
+//        $options = array('json'=>
+//            array(
+//                'comment' => 'Im testing Happyr LinkedIn client! https://github.com/Happyr/LinkedIn-API-client',
+//                'visibility' => array(
+//                    'code' => 'anyone'
+//                )
+//            )
+//        );
+//
+//        $result = $linkedIn->post('v1/people/~/shares', $options);
+//
+//        var_dump($result);
+
     }
     public function grabBing(){
+
 
     }
 }
