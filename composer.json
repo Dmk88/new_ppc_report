@@ -12,7 +12,13 @@
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
         "nesbot/carbon": "^1.22",
-        "phpdocumentor/reflection-docblock": "^3.0.3"
+        "phpdocumentor/reflection-docblock": "^3.0.3",
+        "artesaos/laravel-linkedin": "*",
+        "php-http/curl-client": "*",
+        "guzzlehttp/psr7": "*",
+        "php-http/message": "*",
+        "happyr/linkedin-api-client": "*"
+
     },
     "require-dev": {
         "filp/whoops": "~2.0",
