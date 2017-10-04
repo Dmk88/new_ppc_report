@@ -211,7 +211,7 @@ clientCustomerId = "413-024-1238"
             }
             // Advance the paging index.
             $selector->getPaging()->setStartIndex($selector->getPaging()->getStartIndex() + self::PAGE_LIMIT);
-        } while ($selector->getPaging()->getStartIndex() < $totalNumEntries);git
+        } while ($selector->getPaging()->getStartIndex() < $totalNumEntries);
         printf("Number of results found: %d\n", $totalNumEntries);
         
         
