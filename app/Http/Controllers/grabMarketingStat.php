@@ -24,6 +24,7 @@ use Google\AdsApi\AdWords\ReportSettingsBuilder;
 use Google\AdsApi\AdWords\v201708\cm\Predicate;
 use Google\AdsApi\AdWords\v201708\cm\PredicateOperator;
 use Google\AdsApi\AdWords\v201708\cm\ReportDefinitionReportType;
+use Happyr\LinkedIn;
 
 
 class grabMarketingStat extends Controller
@@ -217,5 +218,23 @@ clientCustomerId = "413-024-1238"
         // $client = $this->getClient();
         // $this->main();
         // // dd('ddd');
+    }
+    public function grabLinkedin(){
+        echo "<pre>";
+        $linkedIn=new \Happyr\LinkedIn\LinkedIn('78ruqha4he57aa', 'Ai3zGFNAV6cpYKxO');
+        var_dump($linkedIn);
+        if ($linkedIn->isAuthenticated()) {
+            //we know that the user is authenticated now. Start query the API
+            $user=$linkedIn->get('v1/people/~:(firstName,lastName)');
+            echo "Welcome ".$user['firstName'];
+
+            exit();
+        } elseif ($linkedIn->hasError()) {
+            echo "User canceled the login.";
+            exit();
+        }
+    }
+    public function grabBing(){
+
     }
 }
