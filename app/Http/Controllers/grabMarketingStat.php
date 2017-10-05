@@ -132,40 +132,29 @@ class grabMarketingStat extends Controller
         $reportDownloader = new ReportDownloader($session);
         //dd($session);
         // Optional: If you need to adjust report settings just for this one
-        // request, you can create and supply the settings override here. Otherwise,
+        // request, you can create and supply the settings overrid  e here. Otherwise,
         // default values from the configuration file (adsapi_php.ini) are used.
         $reportSettingsOverride = (new ReportSettingsBuilder())
             ->includeZeroImpressions(false)
             ->build();
+        
 //        echo"<pre>";
 ////        var_dump($reportDefinition);
 ////        var_dump($reportSettingsOverride);
 ////        dd($reportDefinition);
         $reportDownloadResult = $reportDownloader->downloadReport(
             $reportDefinition, $reportSettingsOverride);
-
+        // dd($reportDownloadResult);
         $reportDownloadResult->saveToFile($filePath);
 
         printf("Report with name '%s' was downloaded to '%s'.\n",
             $reportDefinition->getReportName(), $filePath);
     }
+    
+    
+    
     public function grab()
     {
-        $config_str = '[ADWORDS]
-developerToken = "%s"
-clientCustomerId = "%s"
-[OAUTH2]
- clientId = "%s"
- clientSecret = "QsIQYmtl8N-GPmpr-45rlNgo"
- refreshToken = "1/FBxKBkOdnXwNke0KAcfDCClzLbjhPgNpgg56zXREJsk"';
-        $config_str2 = '[ADWORDS]
-developerToken = "-1eyB_C3TMVQ1JL8yGqSIg"
-clientCustomerId = "413-024-1238"
-[OAUTH2]
- clientId = "927812699630-q4it23e1tglhnjjid9jftqf4crbjcl6l.apps.googleusercontent.com"
- clientSecret = "QsIQYmtl8N-GPmpr-45rlNgo"
- refreshToken = "1/FBxKBkOdnXwNke0KAcfDCClzLbjhPgNpgg56zXREJsk"';
-        
         // define('APPLICATION_NAME', 'Google API');
         // define('CREDENTIALS_PATH', app_path() . '/Api/google-drive.json');
         // define('CLIENT_SECRET_PATH', app_path() . '/Api/client_secret.json');
@@ -185,18 +174,18 @@ clientCustomerId = "413-024-1238"
         $OAuth2TokenBuilder  = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
 
-        $config_str = sprintf($config_str,
-            '-1eyB_C3TMVQ1JL8yGqSIg', '413-024-1238',
-            '927812699630-q4it23e1tglhnjjid9jftqf4crbjcl6l.apps.googleusercontent.com');
+        $config = sprintf($_ENV['ADWORDS_CONFIG'],
+            $_ENV['ADWORDS_CONFIG'], $_ENV['ADWORDS_CONFIG'],
+            $_ENV['ADWORDS_CONFIG']);
         // dd($config_str);
-        $oAuth2Credential    = ($OAuth2TokenBuilder->from($configurationLoader->fromString($config_str)))->build();
+        $oAuth2Credential    = ($OAuth2TokenBuilder->from($configurationLoader->fromString($config)))->build();
         // Construct an API session configured from a properties file and the OAuth2
         // credentials above.
         // dd($oAuth2Credential);
-        $session = (new AdWordsSessionBuilder())->fromFile(app_path() . $_ENV['ADSAPI'])->withOAuth2Credential($oAuth2Credential)->build();
+        $session = (new AdWordsSessionBuilder())->from($configurationLoader->fromString($config))->withOAuth2Credential($oAuth2Credential)->build();
 
         // self::runExample(new AdWordsServices(), $session);
-        $filePath = 'criteria-report.csv';
+        $filePath = '/criteria-report.csv';
 
         self::runExample2( $session,$filePath);
 
@@ -258,24 +247,7 @@ clientCustomerId = "413-024-1238"
         $url = $linkedIn->getLoginUrl();
         echo "<a href='$url'>Login with LinkedIn</a>";
 
-        //****************Publish posts*************
-//        $linkedIn=new \Happyr\LinkedIn\LinkedIn('78ruqha4he57aa', 'Ai3zGFNAV6cpYKxO');
-//        $linkedIn->setHttpClient(new \Http\Adapter\Guzzle6\Client());
-//        $linkedIn->setHttpMessageFactory(new \Http\Message\MessageFactory\GuzzleMessageFactory());
-//        $linkedIn->setAccessToken('access_token_from_db');
-//
-//        $options = array('json'=>
-//            array(
-//                'comment' => 'Im testing Happyr LinkedIn client! https://github.com/Happyr/LinkedIn-API-client',
-//                'visibility' => array(
-//                    'code' => 'anyone'
-//                )
-//            )
-//        );
-//
-//        $result = $linkedIn->post('v1/people/~/shares', $options);
-//
-//        var_dump($result);
+
 
     }
     public function grabBing(){
