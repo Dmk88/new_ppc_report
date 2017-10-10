@@ -533,16 +533,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.28",
+            "version": "v0.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/google/google-api-php-client-services.git",
-                "reference": "209421578d76762806087944cf514f1ede6cf7ad"
+                "reference": "d23e00e38b209d5dc60c1bb71c8f065ee5b6823e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/google/google-api-php-client-services/zipball/209421578d76762806087944cf514f1ede6cf7ad",
-                "reference": "209421578d76762806087944cf514f1ede6cf7ad",
+                "url": "https://api.github.com/repos/google/google-api-php-client-services/zipball/d23e00e38b209d5dc60c1bb71c8f065ee5b6823e",
+                "reference": "d23e00e38b209d5dc60c1bb71c8f065ee5b6823e",
                 "shasum": ""
             },
             "require": {
@@ -566,7 +566,7 @@
             "keywords": [
                 "google"
             ],
-            "time": "2017-09-30T00:22:48+00:00"
+            "time": "2017-10-08T00:22:35+00:00"
         },
         {
             "name": "google/auth",
@@ -4478,16 +4478,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "6.4.0",
+            "version": "6.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "a1bcaca096998de32c29535fdd2dea0c475e8f61"
+                "reference": "b770d8ba7e60295ee91d69d5a5e01ae833cac220"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a1bcaca096998de32c29535fdd2dea0c475e8f61",
-                "reference": "a1bcaca096998de32c29535fdd2dea0c475e8f61",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/b770d8ba7e60295ee91d69d5a5e01ae833cac220",
+                "reference": "b770d8ba7e60295ee91d69d5a5e01ae833cac220",
                 "shasum": ""
             },
             "require": {
@@ -4558,7 +4558,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2017-10-06T03:14:57+00:00"
+            "time": "2017-10-07T17:53:53+00:00"
         },
         {
             "name": "phpunit/phpunit-mock-objects",

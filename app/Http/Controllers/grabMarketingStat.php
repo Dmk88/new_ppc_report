@@ -211,13 +211,38 @@ class grabMarketingStat extends Controller
         printf("Report with name '%s' was downloaded to '%s'.\n",
             $reportDefinition->getReportName(), $filePath);
     }
+    public static function runExample4(AdWordsSession $session, $reportFormat, $filePath) {
+        // Create report query to get the data for today.
+        $today=date('Ymd');
+        $reportQuery = 'SELECT CampaignId, '
+            . 'Impressions, Clicks, Cost FROM CRITERIA_PERFORMANCE_REPORT '
+            . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [886858006, 886858015, 886858009, 886857994] DURING 20171001, '.$today;
+
+        // Download report as a string.
+        $reportDownloader = new ReportDownloader($session);
+        // Optional: If you need to adjust report settings just for this one
+        // request, you can create and supply the settings override here. Otherwise,
+        // default values from the configuration file (adsapi_php.ini) are used.
+        $reportSettingsOverride = (new ReportSettingsBuilder())
+            ->includeZeroImpressions(false)
+            ->build();
+        $reportDownloadResult = $reportDownloader->downloadReportWithAwql(
+            $reportQuery, $reportFormat, $reportSettingsOverride);
+        echo "<pre>";
+        print "Report was downloaded and printed below:\n";
+        print $reportDownloadResult->getAsString();
+        echo "</pre>";
+//        $reportDownloadResult->saveToFile($filePath);
+//        printf("Report with name '%s' was downloaded to '%s'.\n",
+//            $reportDefinition->getReportName(), $filePath);
+    }
 
 
     public function grab()
     {
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
-        $customer_id = "4130241238";
+        $customer_id = "6200435280";
         $config_0 = '[ADWORDS]
 developerToken = "' . $_ENV['ADWORDS_DEVELOPER_TOKEN'] . '"
 clientCustomerId = "' . $customer_id . '"
@@ -243,44 +268,45 @@ clientCustomerId = "%s"
         // self::runExample(new AdWordsServices(), $session);
         $filePath = 'criteria-report.csv';
 
-        self::runExample2($session, $filePath);
+        //self::runExample4($session, $filePath);
+        self::runExample4($session, DownloadFormat::CSV, $filePath);
 
         exit;
 
-        $adWordsServices = new AdWordsServices();
-        $campaignService = $adWordsServices->get($session, CampaignService::class);
-        // dd($campaignService);
-        // Create selector.
-        $selector = new Selector();
-
-        $selector->setFields(['Id', 'Name']);
-        $selector->setOrdering([new OrderBy('Name', SortOrder::ASCENDING)]);
-        $selector->setPaging(new Paging(0, self::PAGE_LIMIT));
-        $totalNumEntries = 0;
-
-
-        do {
-            // Make the get request.
-
-            $page = $campaignService->get($selector);
-            // Display results.
-            if ($page->getEntries() !== null) {
-
-                $totalNumEntries = $page->getTotalNumEntries();
-                foreach ($page->getEntries() as $campaign) {
-
-                    printf("Campaign with ID %d and name '%s' was found.\n", $campaign->getId(), $campaign->getName());
-                }
-            }
-            // Advance the paging index.
-            $selector->getPaging()->setStartIndex($selector->getPaging()->getStartIndex() + self::PAGE_LIMIT);
-        } while ($selector->getPaging()->getStartIndex() < $totalNumEntries);
-        printf("Number of results found: %d\n", $totalNumEntries);
-
-
-        // $client = $this->getClient();
-        // $this->main();
-        // // dd('ddd');
+//        $adWordsServices = new AdWordsServices();
+//        $campaignService = $adWordsServices->get($session, CampaignService::class);
+//        // dd($campaignService);
+//        // Create selector.
+//        $selector = new Selector();
+//
+//        $selector->setFields(['Id', 'Name']);
+//        $selector->setOrdering([new OrderBy('Name', SortOrder::ASCENDING)]);
+//        $selector->setPaging(new Paging(0, self::PAGE_LIMIT));
+//        $totalNumEntries = 0;
+//
+//
+//        do {
+//            // Make the get request.
+//
+//            $page = $campaignService->get($selector);
+//            // Display results.
+//            if ($page->getEntries() !== null) {
+//
+//                $totalNumEntries = $page->getTotalNumEntries();
+//                foreach ($page->getEntries() as $campaign) {
+//
+//                    printf("Campaign with ID %d and name '%s' was found.\n", $campaign->getId(), $campaign->getName());
+//                }
+//            }
+//            // Advance the paging index.
+//            $selector->getPaging()->setStartIndex($selector->getPaging()->getStartIndex() + self::PAGE_LIMIT);
+//        } while ($selector->getPaging()->getStartIndex() < $totalNumEntries);
+//        printf("Number of results found: %d\n", $totalNumEntries);
+//
+//
+//        // $client = $this->getClient();
+//        // $this->main();
+//        // // dd('ddd');
     }
 
     //**************LINKEDIN***********
