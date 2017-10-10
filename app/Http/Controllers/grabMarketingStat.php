@@ -90,8 +90,8 @@ clientCustomerId = "' . $customer_id . '"
         $Click=$arrayReport[count($arrayReport)-2];
         $Cost=$arrayReport[count($arrayReport)-1];
         echo "<pre>";
-        print "Report was downloaded and printed below:\n";
-        print $stringReport;
+        //print "Report was downloaded and printed below:\n";
+        //print $stringReport;
         printf("<br>CustomerID =%s, CompaignID =%s <br> Impressions = %s, Click = %s, Cost = %s", $customer_id,$compaign_id, $Impressions,$Click,$Cost);
         echo "</pre>";
     }
