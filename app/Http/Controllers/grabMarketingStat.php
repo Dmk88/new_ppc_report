@@ -40,6 +40,7 @@ class grabMarketingStat extends Controller
 {
 
     const PAGE_LIMIT = 500;
+    public $input=[];
 
     public static function getReport(AdWordsSession $session, $reportQuery, $reportFormat) {
 
@@ -80,20 +81,17 @@ clientCustomerId = "' . $customer_id . '"
             . 'Impressions, Clicks, Cost FROM CRITERIA_PERFORMANCE_REPORT '
             . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [886858006, 886858015, 886858009, 886857994] DURING 20171001, '.$today;
         $buildReportQuery = 'SELECT CampaignId, '
-            . 'Impressions, Clicks, Cost FROM CRITERIA_PERFORMANCE_REPORT '
+            . 'Clicks, Impressions, Cost FROM CRITERIA_PERFORMANCE_REPORT '
             . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [%s] DURING %s';
         $buildReportQuery=sprintf($buildReportQuery,$compaign_id,$during);
 
         $stringReport=self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport=explode(',',$stringReport);
-        $Impressions=$arrayReport[count($arrayReport)-3];
-        $Click=$arrayReport[count($arrayReport)-2];
+        $Click=$arrayReport[count($arrayReport)-3];
+        $Impressions=$arrayReport[count($arrayReport)-2];
         $Cost=$arrayReport[count($arrayReport)-1];
-        echo "<pre>";
-        //print "Report was downloaded and printed below:\n";
-        //print $stringReport;
-        printf("<br>CustomerID =%s, CompaignID =%s <br> Impressions = %s, Click = %s, Cost = %s", $customer_id,$compaign_id, $Impressions,$Click,$Cost);
-        echo "</pre>";
+        array_push($this->input, array($Click, $Impressions,$Cost));
+
     }
 
     public function grab()
@@ -109,11 +107,13 @@ clientCustomerId = "' . $customer_id . '"
         ];
         $client  = GoogleClient::get_instance($default);
         $service = new Google_Service_Sheets($client->client);
-        $spreadsheetId = '10G1ev9mY2Sa0rhjmNAE751nRa3ryluFO_Y6KHgji2A0';
+        $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input and source
-        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A1:C2');
-        $rangeInput = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
+        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:E3');
+        $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
+        $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
         $rangeSource ='Raw data!'.$ranges[1][1].':'.$ranges[1][2];
+
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
         foreach ($source as $row){
@@ -130,22 +130,39 @@ clientCustomerId = "' . $customer_id . '"
                                 else break;
                             }
                         }
-                        //printf("CustomerID=%s, CompaignID=%s <br>", $customer_id, $compaign_id);
-                    //Get Adwords report
-                        $during='20171001, '.date('Ymd');
+                        $during=date('Ym').'01, '.date('Ymd'); // This month
                             self::getReportAdwords($customer_id, $compaign_id, $during);
                     }
-                    else
-                    printf ("CustomerID=%s, Empty CompaignID<br>", $customer_id);
+                    else {
+                        array_push($this->input, array(0, 0, 0));
+                    }
                 }
-                //print($row[0] . "\n");
+                else
+                    array_push($this->input, array(0, 0, 0));
             }
+            else
+                array_push($this->input, array(0, 0, 0));
         }
 
-//        echo "<pre>";
-//        print_r($source);
-//        echo "</pre>";
 
+        //Set result to Google Sheets
+        //The current month
+        If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
+            echo "Error update range to Sheet!";
+        }
+        else{
+            echo "Statistics for the current month have been updated!<br>";
+        };
+        //The last month
+        If (date('t')==date('d')){
+            If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
+                echo "Error update range to Sheet!";
+            }
+            else{
+                echo "Statistics for the last month have been updated!<br>";
+            };
+        }
+        echo "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
     }
 
     //**************LINKEDIN***********
@@ -178,33 +195,5 @@ clientCustomerId = "' . $customer_id . '"
 
 
     }
-    //**************Google Sheets***********
-    public function googleSheets()
-    {
-        $default = [
-            'APPLICATION_NAME'   => 'Google Sheets API',
-            'CREDENTIALS_PATH'   => app_path() . '/ApiSources/google-sheets.json',
-            'CLIENT_SECRET_PATH' => app_path() . '/ApiSources/client_secret_sheets.json',
-            'SCOPES'             => array(
-                Google_Service_Sheets::SPREADSHEETS_READONLY,
-            ),
-        ];
-        $client  = GoogleClient::get_instance($default);
-        $service = new Google_Service_Sheets($client->client);
-        $spreadsheetId = '10G1ev9mY2Sa0rhjmNAE751nRa3ryluFO_Y6KHgji2A0';
 
-        $rangeGet = 'Raw data!J5:L';
-        $rangeSet ='Raw data!C5:E';
-
-        $values = Sheet::getOfSheet($service, $spreadsheetId, $rangeGet);
-
-        echo "<pre>";
-        print_r($values);
-        echo "</pre>";
-
-         If (!Sheet::setToSheet($service, $spreadsheetId, $rangeSet, $values)){
-            echo "Error update range to Sheet";
-        };
-
-    }
 }
