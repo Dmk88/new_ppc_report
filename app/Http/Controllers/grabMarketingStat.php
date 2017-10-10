@@ -58,11 +58,9 @@ class grabMarketingStat extends Controller
     }
 
 
-    public function grab()
-    {
+    public function getReportAdwords($customer_id, $compaign_id, $during){
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
-        $customer_id = "6200435280";
         $config = '[ADWORDS]
 developerToken = "' . $_ENV['ADWORDS_DEVELOPER_TOKEN'] . '"
 clientCustomerId = "' . $customer_id . '"
@@ -84,8 +82,9 @@ clientCustomerId = "' . $customer_id . '"
         $buildReportQuery = 'SELECT CampaignId, '
             . 'Impressions, Clicks, Cost FROM CRITERIA_PERFORMANCE_REPORT '
             . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [%s] DURING %s';
+        $buildReportQuery=sprintf($buildReportQuery,$compaign_id,$during);
 
-        $stringReport=self::getReport($session, $reportQuery, DownloadFormat::CSV);
+        $stringReport=self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport=explode(',',$stringReport);
         $Impressions=$arrayReport[count($arrayReport)-3];
         $Click=$arrayReport[count($arrayReport)-2];
@@ -93,11 +92,12 @@ clientCustomerId = "' . $customer_id . '"
         echo "<pre>";
         print "Report was downloaded and printed below:\n";
         print $stringReport;
-        printf("<br> Impressions = %s, Click = %s, Cost = %s", $Impressions,$Click,$Cost);
+        printf("<br>CustomerID =%s, CompaignID =%s <br> Impressions = %s, Click = %s, Cost = %s", $customer_id,$compaign_id, $Impressions,$Click,$Cost);
         echo "</pre>";
+    }
 
-
-
+    public function grab()
+    {
 
         $default = [
             'APPLICATION_NAME'   => 'Google Sheets API',
@@ -130,7 +130,10 @@ clientCustomerId = "' . $customer_id . '"
                                 else break;
                             }
                         }
-                        printf("CustomerID=%s, CompaignID=%s <br>", $customer_id, $compaign_id);
+                        //printf("CustomerID=%s, CompaignID=%s <br>", $customer_id, $compaign_id);
+                    //Get Adwords report
+                        $during='20171001, '.date('Ymd');
+                            self::getReportAdwords($customer_id, $compaign_id, $during);
                     }
                     else
                     printf ("CustomerID=%s, Empty CompaignID<br>", $customer_id);
