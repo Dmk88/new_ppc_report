@@ -123,8 +123,11 @@ clientCustomerId = "' . $customer_id . '"
                     if (isset($row[2]) && !empty($row[2])) {
                         $compaign_id = $row[2];
                         if (count($row) > 2) {
-                            for ($i = 2; $i <= count($row); $i++) {
-                                //$compaign_id = $compaign_id . ', ' . $row[$i];
+                            for ($i = 3; $i <= count($row); $i++) {
+                                if (isset($row[$i]) && !empty($row[$i])) {
+                                    $compaign_id = $compaign_id . ', ' . $row[$i];
+                                }
+                                else break;
                             }
                         }
                         printf("CustomerID=%s, CompaignID=%s <br>", $customer_id, $compaign_id);
