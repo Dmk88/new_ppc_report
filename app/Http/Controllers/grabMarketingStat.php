@@ -98,6 +98,8 @@ clientCustomerId = "' . $customer_id . '"
     public function grab()
     {
         ini_set("max_execution_time", 0);
+        var_dump(ini_get("max_execution_time"));
+        die('Error');
         $default = [
             'APPLICATION_NAME'   => 'Google Sheets API',
             'CREDENTIALS_PATH'   => app_path() . '/ApiSources/google-sheets.json',
