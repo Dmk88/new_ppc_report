@@ -60,6 +60,7 @@ class grabMarketingStat extends Controller
 
 
     public function getReportAdwords($customer_id, $compaign_id, $during){
+        ini_set("max_execution_time", 0);
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
         $config = '[ADWORDS]
@@ -97,7 +98,7 @@ clientCustomerId = "' . $customer_id . '"
 
     public function grab()
     {
-        ini_set("max_execution_time", 300);
+        ini_set("max_execution_time", 0);
 //        var_dump(ini_get("max_execution_time"));
 //        die('Error');
         $default = [
