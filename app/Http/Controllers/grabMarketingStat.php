@@ -91,12 +91,13 @@ clientCustomerId = "' . $customer_id . '"
         $Impressions=$arrayReport[count($arrayReport)-2];
         $Cost=$arrayReport[count($arrayReport)-1];
         array_push($this->input, array($Click, $Impressions,$Cost));
+        echo " successful! <br>";
 
     }
 
     public function grab()
     {
-
+        ini_set("max_execution_time", 0);
         $default = [
             'APPLICATION_NAME'   => 'Google Sheets API',
             'CREDENTIALS_PATH'   => app_path() . '/ApiSources/google-sheets.json',
@@ -116,9 +117,12 @@ clientCustomerId = "' . $customer_id . '"
 
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
+        echo "Processing started!<br>";
         foreach ($source as $row){
             if(isset($row) && !empty($row)) {
                 if ($row[0]=="adwords") {
+                    //get adwords account
+                    echo "Adwords - ";
                     $customer_id = str_replace('-', '', $row[1]);
                     if (isset($row[2]) && !empty($row[2])) {
                         $compaign_id = $row[2];
@@ -135,14 +139,26 @@ clientCustomerId = "' . $customer_id . '"
                     }
                     else {
                         array_push($this->input, array(0, 0, 0));
+                        echo " empty CompaignID! <br>";
                     }
                 }
-                else
+                elseif ($row[0]=="bing") {
+                    //get bing account
+                    echo "Bing - ";
                     array_push($this->input, array(0, 0, 0));
+                    echo " not processed! <br>";
+                }
+                elseif ($row[0]=="linkedin"){
+                    //get linkedin account
+                    echo "Linkedin - ";
+                    array_push($this->input, array(0, 0, 0));
+                    echo " not processed! <br>";
+                }
             }
             else
                 array_push($this->input, array(0, 0, 0));
         }
+        echo "Processing complete!<br>";
 
 
         //Set result to Google Sheets
