@@ -125,7 +125,7 @@ clientCustomerId = "' . $customer_id . '"
             if(isset($row) && !empty($row)) {
                 if ($row[0]=="adwords") {
                     //get adwords account
-                    echo "Adwords - ";
+                    echo "Adwords AccountID=".$row[1]." - ";
                     $customer_id = str_replace('-', '', $row[1]);
                     if (isset($row[2]) && !empty($row[2])) {
                         $compaign_id = $row[2];
@@ -147,13 +147,13 @@ clientCustomerId = "' . $customer_id . '"
                 }
                 elseif ($row[0]=="bing") {
                     //get bing account
-                    echo "Bing - ";
+                    echo "Bing AccountID=".$row[1]." - ";
                     array_push($this->input, array(0, 0, 0));
                     echo " not processed! <br>";
                 }
                 elseif ($row[0]=="linkedin"){
                     //get linkedin account
-                    echo "Linkedin - ";
+                    echo "Linkedin AccountID=".$row[1]." - ";
                     array_push($this->input, array(0, 0, 0));
                     echo " not processed! <br>";
                 }
