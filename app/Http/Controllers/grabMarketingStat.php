@@ -76,14 +76,11 @@ clientCustomerId = "' . $customer_id . '"
         $oAuth2Credential = ($OAuth2TokenBuilder->from($configurationLoader->fromString($config)))->build();
 
         $session = (new AdWordsSessionBuilder())->from($configurationLoader->fromString($config))->withOAuth2Credential($oAuth2Credential)->build();
-        // Create report query to get the data for today.
-        $today=date('Ymd');
-        $reportQuery = 'SELECT CampaignId, '
-            . 'Impressions, Clicks, Cost FROM CRITERIA_PERFORMANCE_REPORT '
-            . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [886858006, 886858015, 886858009, 886857994] DURING 20171001, '.$today;
+
+        // Create report query
         $buildReportQuery = 'SELECT CampaignId, '
             . 'Clicks, Impressions, Cost FROM CRITERIA_PERFORMANCE_REPORT '
-            . 'WHERE Status IN [ENABLED, PAUSED] AND CampaignId IN [%s] DURING %s';
+            . 'WHERE CampaignId IN [%s] DURING %s';
         $buildReportQuery=sprintf($buildReportQuery,$compaign_id,$during);
 
         $stringReport=self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
@@ -91,6 +88,10 @@ clientCustomerId = "' . $customer_id . '"
         $Click=$arrayReport[count($arrayReport)-3];
         $Impressions=$arrayReport[count($arrayReport)-2];
         $Cost=$arrayReport[count($arrayReport)-1];
+        //Cut of zeros
+        if($Cost!=0){
+            $Cost=substr($Cost,0,-5);
+        }
         array_push($this->input, array($Click, $Impressions,$Cost));
         echo " successful! <br>";
 
@@ -112,11 +113,17 @@ clientCustomerId = "' . $customer_id . '"
         $client  = GoogleClient::get_instance($default);
         $service = new Google_Service_Sheets($client->client);
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
-        //get ranges of input and source
-        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:E3');
+        //get ranges of input,
+        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:G3');
+
         $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
         $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
+        $rangeInputArbitary ='Raw data!'.$ranges[0][5].':'.$ranges[0][6];
         $rangeSource ='Raw data!'.$ranges[1][1].':'.$ranges[1][2];
+        $rangeNameCurrent='Raw data!'.$ranges[0][1].':'.$ranges[0][2];
+        $rangeNameLast='Raw data!'.$ranges[0][1].':'.$ranges[0][2];
+        $rangeDateUpdated='Raw data!B4';
+
 
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
@@ -138,6 +145,7 @@ clientCustomerId = "' . $customer_id . '"
                             }
                         }
                         $during=date('Ym').'01, '.date('Ymd'); // This month
+                        //$during='20170901, 20170930'; // This month
                             self::getReportAdwords($customer_id, $compaign_id, $during);
                     }
                     else {
@@ -159,7 +167,8 @@ clientCustomerId = "' . $customer_id . '"
                 }
             }
             else
-                array_push($this->input, array(0, 0, 0));
+                //get empty row
+                array_push($this->input, array('','',''));
         }
         echo "Processing complete!<br>";
 
@@ -188,13 +197,17 @@ clientCustomerId = "' . $customer_id . '"
     public function grabLinkedin()
     {
         // *************Login***********
-        $linkedIn = new \Happyr\LinkedIn\LinkedIn('78ruqha4he57aa', 'Ai3zGFNAV6cpYKxO');
+        $linkedIn = new \Happyr\LinkedIn\LinkedIn('77dtkigf97865t', 'anVsVZjlXTj6Hcr6');
         $linkedIn->setHttpClient(new \Http\Adapter\Guzzle6\Client());
         $linkedIn->setHttpMessageFactory(new \Http\Message\MessageFactory\GuzzleMessageFactory());
         if ($linkedIn->isAuthenticated()) {
             //we know that the user is authenticated now. Start query the API
             $user = $linkedIn->get('v1/people/~:(firstName,lastName)');
+            $compaign=$linkedIn->get('v2/adCampaignsV2/{500610594}');
             echo "Welcome " . $user['firstName'];
+            echo "<pre>";
+            var_dump($compaign);
+            echo "</pre>";
 
             exit();
         } elseif ($linkedIn->hasError()) {
