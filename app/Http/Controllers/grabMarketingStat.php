@@ -41,6 +41,8 @@ class grabMarketingStat extends Controller
 
     const PAGE_LIMIT = 500;
     public $input=[];
+    public $inputArbitary=[];
+
 
     public static function getReport(AdWordsSession $session, $reportQuery, $reportFormat) {
 
@@ -59,7 +61,7 @@ class grabMarketingStat extends Controller
     }
 
 
-    public function getReportAdwords($customer_id, $compaign_id, $during){
+    public function getReportAdwords($customer_id, $compaign_id, $during, $arbitary){
         ini_set("max_execution_time", 0);
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
@@ -92,7 +94,12 @@ clientCustomerId = "' . $customer_id . '"
         if($Cost!=0){
             $Cost=substr($Cost,0,-5);
         }
-        array_push($this->input, array($Click, $Impressions,$Cost));
+        //Switch input result to current or arbitary month
+        if($arbitary!=0)
+            array_push($this->inputArbitary, array($Click, $Impressions,$Cost));
+        else
+            array_push($this->input, array($Click, $Impressions,$Cost));
+
         echo " successful! <br>";
 
     }
@@ -115,14 +122,18 @@ clientCustomerId = "' . $customer_id . '"
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input,
         $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:G3');
+        $rangesArbitary=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!J5:K5');
 
         $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
         $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
         $rangeInputArbitary ='Raw data!'.$ranges[0][5].':'.$ranges[0][6];
         $rangeSource ='Raw data!'.$ranges[1][1].':'.$ranges[1][2];
-        $rangeNameCurrent='Raw data!'.$ranges[0][1].':'.$ranges[0][2];
-        $rangeNameLast='Raw data!'.$ranges[0][1].':'.$ranges[0][2];
+        $rangeNameCurrent='Raw data!C5:E5';
+        $rangeNameLast='Raw data!F5:H5';
         $rangeDateUpdated='Raw data!B4';
+        $duringCurrent=date('Ym').'01, '.date('Ymd'); // This month
+        $duringArbitary=$rangesArbitary[0][0].', '.$rangesArbitary[0][1]; // Arbitary month
+
 
 
 
@@ -144,12 +155,12 @@ clientCustomerId = "' . $customer_id . '"
                                 else break;
                             }
                         }
-                        $during=date('Ym').'01, '.date('Ymd'); // This month
-                        //$during='20170901, 20170930'; // This month
-                            self::getReportAdwords($customer_id, $compaign_id, $during);
+                            self::getReportAdwords($customer_id, $compaign_id, $duringCurrent,0);
+                            self::getReportAdwords($customer_id, $compaign_id, $duringArbitary,1);
                     }
                     else {
                         array_push($this->input, array(0, 0, 0));
+                        array_push($this->inputArbitary, array(0, 0, 0));
                         echo " empty CompaignID! <br>";
                     }
                 }
@@ -157,18 +168,21 @@ clientCustomerId = "' . $customer_id . '"
                     //get bing account
                     echo "Bing AccountID=".$row[1]." - ";
                     array_push($this->input, array(0, 0, 0));
+                    array_push($this->inputArbitary, array(0, 0, 0));
                     echo " not processed! <br>";
                 }
                 elseif ($row[0]=="linkedin"){
                     //get linkedin account
                     echo "Linkedin AccountID=".$row[1]." - ";
                     array_push($this->input, array(0, 0, 0));
+                    array_push($this->inputArbitary, array(0, 0, 0));
                     echo " not processed! <br>";
                 }
             }
             else
                 //get empty row
                 array_push($this->input, array('','',''));
+                array_push($this->inputArbitary, array('','',''));
         }
         echo "Processing complete!<br>";
 
@@ -180,6 +194,13 @@ clientCustomerId = "' . $customer_id . '"
         }
         else{
             echo "Statistics for the current month have been updated!<br>";
+            //The arbitary month
+            If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary)){
+                echo "Error update range to Sheet!";
+            }
+            else {
+                echo "Statistics for the arbitary month have been updated!<br>";
+            }
         };
         //The last month
         If (date('t')==date('d')){
