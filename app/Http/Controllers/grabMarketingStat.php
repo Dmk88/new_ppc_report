@@ -95,10 +95,13 @@ clientCustomerId = "' . $customer_id . '"
             $Cost=substr($Cost,0,-5);
         }
         //Switch input result to current or arbitary month
-        if($arbitary!=0)
-            array_push($this->inputArbitary, array($Click, $Impressions,$Cost));
-        else
-            array_push($this->input, array($Click, $Impressions,$Cost));
+
+        if($arbitary!=0) {
+            array_push($this->inputArbitary, array($Click, $Impressions, $Cost));
+        }
+        else {
+            array_push($this->input, array($Click, $Impressions, $Cost));
+        }
 
         echo " successful! <br>";
 
@@ -122,7 +125,6 @@ clientCustomerId = "' . $customer_id . '"
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input,
         $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:G3');
-        $rangesArbitary=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!J5:K5');
 
         $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
         $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
@@ -132,10 +134,9 @@ clientCustomerId = "' . $customer_id . '"
         $rangeNameLast='Raw data!F5:H5';
         $rangeDateUpdated='Raw data!B4';
         $duringCurrent=date('Ym').'01, '.date('Ymd'); // This month
-        $duringArbitary=$rangesArbitary[0][0].', '.$rangesArbitary[0][1]; // Arbitary month
-
-
-
+        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+            $duringArbitary = $ranges[1][5] . ', ' . $ranges[1][6]; // Arbitary month
+        }
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
         echo "Processing started!<br>";
@@ -155,45 +156,63 @@ clientCustomerId = "' . $customer_id . '"
                                 else break;
                             }
                         }
-                            self::getReportAdwords($customer_id, $compaign_id, $duringCurrent,0);
-                            self::getReportAdwords($customer_id, $compaign_id, $duringArbitary,1);
+                        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                            self::getReportAdwords($customer_id, $compaign_id, $duringArbitary, 1);
+                        }
+                        else {
+                            self::getReportAdwords($customer_id, $compaign_id, $duringCurrent, 0);
+                        }
                     }
                     else {
-                        array_push($this->input, array(0, 0, 0));
-                        array_push($this->inputArbitary, array(0, 0, 0));
+                        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                            array_push($this->inputArbitary, array(0, 0, 0));
+                        }
+                        else {
+                            array_push($this->input, array(0, 0, 0));
+                        }
+
                         echo " empty CompaignID! <br>";
                     }
                 }
                 elseif ($row[0]=="bing") {
                     //get bing account
                     echo "Bing AccountID=".$row[1]." - ";
-                    array_push($this->input, array(0, 0, 0));
-                    array_push($this->inputArbitary, array(0, 0, 0));
+                    if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                        array_push($this->inputArbitary, array(0, 0, 0));
+                    }
+                    else {
+                        array_push($this->input, array(0, 0, 0));
+                    }
                     echo " not processed! <br>";
                 }
                 elseif ($row[0]=="linkedin"){
                     //get linkedin account
                     echo "Linkedin AccountID=".$row[1]." - ";
-                    array_push($this->input, array(0, 0, 0));
-                    array_push($this->inputArbitary, array(0, 0, 0));
+                    if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                        array_push($this->inputArbitary, array(0, 0, 0));
+                    }
+                    else {
+                        array_push($this->input, array(0, 0, 0));
+                    }
                     echo " not processed! <br>";
                 }
             }
             else
                 //get empty row
-                array_push($this->input, array('','',''));
-                array_push($this->inputArbitary, array('','',''));
+                if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                    array_push($this->inputArbitary, array('', '', ''));
+                }
+                else {
+                    array_push($this->input, array('', '', ''));
+                }
         }
         echo "Processing complete!<br>";
 
 
         //Set result to Google Sheets
-        //The current month
-        If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
-            echo "Error update range to Sheet!";
-        }
-        else{
-            echo "Statistics for the current month have been updated!<br>";
+
+
+        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
             //The arbitary month
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary)){
                 echo "Error update range to Sheet!";
@@ -201,15 +220,30 @@ clientCustomerId = "' . $customer_id . '"
             else {
                 echo "Statistics for the arbitary month have been updated!<br>";
             }
-        };
-        //The last month
-        If (date('t')==date('d')){
-            If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
+        }
+        else {
+            //The current month
+            If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
                 echo "Error update range to Sheet!";
             }
             else{
-                echo "Statistics for the last month have been updated!<br>";
+                echo "Statistics for the current month have been updated!<br>";
+                Sheet::setToSheet($service, $spreadsheetId, $rangeDateUpdated, array(array(date('r'))));
+                Sheet::setToSheet($service, $spreadsheetId, $rangeNameCurrent, array(array(date('F'))));
+
+
             };
+            //The last month
+            If (date('t')==date('d')){
+                If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
+                    echo "Error update range to Sheet!";
+                }
+                else{
+                    echo "Statistics for the last month have been updated!<br>";
+                    Sheet::setToSheet($service, $spreadsheetId, $rangeNameLast, array(array(date('F'))));
+                };
+            }
+
         }
         echo "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
     }
