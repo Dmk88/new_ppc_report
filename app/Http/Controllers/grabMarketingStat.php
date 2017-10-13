@@ -124,7 +124,7 @@ clientCustomerId = "' . $customer_id . '"
         $service = new Google_Service_Sheets($client->client);
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input,
-        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A2:G3');
+        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:G4');
 
         $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
         $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
