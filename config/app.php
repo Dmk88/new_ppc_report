@@ -177,7 +177,6 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Artesaos\LinkedIn\LinkedinServiceProvider::class,
-
         Barryvdh\Debugbar\ServiceProvider::class,
 
     ],
@@ -230,6 +229,9 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'LinkedIn'  => Artesaos\LinkedIn\LinkedInLaravel::class,
         'Debugbar' => Barryvdh\Debugbar\Facade::class,
+        'Bing'  => Microsoft\BingAds\Samples\V10::class,
+        
+        
     ],
 
 ];
