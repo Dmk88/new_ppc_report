@@ -93,6 +93,14 @@ clientCustomerId = "' . $customer_id . '"
         //Cut of zeros
         if($Cost!=0){
             $Cost=substr($Cost,0,-5);
+            //split cents
+            if((int)$Cost%100!=0){
+                $Cost=substr((int)$Cost-(int)$Cost%100,0,-2).','.(int)$Cost%100;
+            }
+            else{
+                $Cost='0,'.(int)$Cost%100;
+            }
+
         }
         //Switch input result to current or arbitary month
 
