@@ -91,14 +91,14 @@ clientCustomerId = "' . $customer_id . '"
         $Impressions=$arrayReport[count($arrayReport)-2];
         $Cost=$arrayReport[count($arrayReport)-1];
         //Cut of zeros
-        if($Cost!=0){ 
+        if($Cost!=0){
             $Cost=substr($Cost,0,-5);
             //split cents
             if((int)$Cost%100!=0){
-                $Cost=substr((int)$Cost-(int)$Cost%100,0,-2).','.(int)$Cost%100;
+                $Cost=substr((int)$Cost-(int)$Cost%100,0,-2).'.'.(int)$Cost%100;
             }
             else{
-                $Cost='0,'.(int)$Cost%100;
+                $Cost='0.'.(int)$Cost%100;
             }
 
         }
