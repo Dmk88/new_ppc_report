@@ -138,8 +138,8 @@ clientCustomerId = "' . $customer_id . '"
         $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
         $rangeInputArbitary ='Raw data!'.$ranges[0][5].':'.$ranges[0][6];
         $rangeSource ='Raw data!'.$ranges[1][1].':'.$ranges[1][2];
-        $rangeNameCurrent='Raw data!C6:E6';
-        $rangeNameLast='Raw data!F6:H6';
+        $rangeNameCurrent='Raw data!C8:E8';
+        $rangeNameLast='Raw data!F8:H8';
         $rangeDateUpdated='Raw data!B5';
         $duringCurrent=date('Ym').'01, '.date('Ymd'); // This month
         if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
