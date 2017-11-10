@@ -131,7 +131,7 @@ clientCustomerId = "' . $customer_id . '"
         $client  = GoogleClient::get_instance($default);
         $service = new Google_Service_Sheets($client->client);
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
-        //get ranges of input,
+        //get ranges of input
         $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:G4');
 
         $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
@@ -222,6 +222,7 @@ clientCustomerId = "' . $customer_id . '"
 
         if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
             //The arbitary month
+            $this->inputArbitary=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->inputArbitary, $rangeInputArbitary);
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary)){
                 echo "Error update range to Sheet!";
             }
@@ -231,6 +232,7 @@ clientCustomerId = "' . $customer_id . '"
         }
         else {
             //The current month
+            $this->input=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->input, $rangeInputCurrent);
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
                 echo "Error update range to Sheet!";
             }
@@ -243,6 +245,7 @@ clientCustomerId = "' . $customer_id . '"
             };
             //The last month
             If (date('t')==date('d')){
+                $this->input=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->input, $rangeInputLast);
                 If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
                     echo "Error update range to Sheet!";
                 }
