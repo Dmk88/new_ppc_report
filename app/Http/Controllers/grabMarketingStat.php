@@ -208,10 +208,10 @@ clientCustomerId = "' . $customer_id . '"
             else
                 //get empty row
                 if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-                    array_push($this->inputArbitary, array('', '', ''));
+                    array_push($this->inputArbitary, array(NULL,NULL,NULL));
                 }
                 else {
-                    array_push($this->input, array('', '', ''));
+                    array_push($this->input, array(NULL,NULL,NULL));
                 }
         }
         echo "Processing complete!<br>";

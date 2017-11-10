@@ -29,12 +29,10 @@ class GoogleSheet extends Model
     }
     static protected function saveFormulasOfSheets($service, $spreadsheetId, $range, $spreadsheetRows){
         $response = $service->spreadsheets_values->get($spreadsheetId, $spreadsheetRows);
-        $response1 = $service->spreadsheets_formulas->get($spreadsheetId, $spreadsheetRows);
         $values = $response->getValues();
-        $formulas=$response1->getFormulas();
-        echo "<pre>";
-            var_dump($formulas);
-        echo "</pre>";
+//        echo "<pre>";
+//            var_dump($formulas);
+//        echo "</pre>";
         if (count($values) == 0) {
             return "No data found";
         }
