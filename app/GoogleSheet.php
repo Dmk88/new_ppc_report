@@ -29,8 +29,9 @@ class GoogleSheet extends Model
     }
     static protected function saveFormulasOfSheets($service, $spreadsheetId, $range, $spreadsheetRows){
         $response = $service->spreadsheets_values->get($spreadsheetId, $spreadsheetRows);
+        $response1 = $service->spreadsheets_formulas->get($spreadsheetId, $spreadsheetRows);
         $values = $response->getValues();
-        $formulas=$response->getFormulas();
+        $formulas=$response1->getFormulas();
         echo "<pre>";
             var_dump($formulas);
         echo "</pre>";
