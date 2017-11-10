@@ -227,7 +227,7 @@ clientCustomerId = "' . $customer_id . '"
                 echo "Error update range to Sheet!";
             }
             else {
-                echo "Statistics for the arbitary month have been updated!<br>";
+                echo "Statistics for the arbitary month have been updated!<br>";d
             }
         }
         else {
@@ -240,8 +240,6 @@ clientCustomerId = "' . $customer_id . '"
                 echo "Statistics for the current month have been updated!<br>";
                 Sheet::setToSheet($service, $spreadsheetId, $rangeDateUpdated, array(array(date('r'))));
                 Sheet::setToSheet($service, $spreadsheetId, $rangeNameCurrent, array(array(date('F'))));
-
-
             };
             //The last month
             If (date('t')==date('d')){
