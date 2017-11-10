@@ -35,7 +35,7 @@ class GoogleSheet extends Model
         }
         for($i=0;$i<count($values);$i++ ){
             for($j=0;$j<count($values($i));$j++){
-                if((string)$values[$i][$j][0]=='='){
+                if($values[$i][$j][0]=="="){
                     $range[$i][$j]=$values[$i][$j];
                 }
             }
