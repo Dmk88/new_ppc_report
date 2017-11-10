@@ -222,7 +222,6 @@ clientCustomerId = "' . $customer_id . '"
 
         if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
             //The arbitary month
-            $this->inputArbitary=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->inputArbitary, $rangeInputArbitary);
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary)){
                 echo "Error update range to Sheet!";
             }
@@ -232,7 +231,6 @@ clientCustomerId = "' . $customer_id . '"
         }
         else {
             //The current month
-            $this->input=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->input, $rangeInputCurrent);
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
                 echo "Error update range to Sheet!";
             }
@@ -243,7 +241,6 @@ clientCustomerId = "' . $customer_id . '"
             };
             //The last month
             If (date('t')==date('d')){
-                $this->input=Sheet::saveFormulasOfSheets($service, $spreadsheetId, $this->input, $rangeInputLast);
                 If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
                     echo "Error update range to Sheet!";
                 }

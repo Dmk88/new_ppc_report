@@ -27,25 +27,4 @@ class GoogleSheet extends Model
             return $values;
         }
     }
-    static protected function saveFormulasOfSheets($service, $spreadsheetId, $range, $spreadsheetRows){
-        $response = $service->spreadsheets_values->get($spreadsheetId, $spreadsheetRows);
-        $values = $response->getValues();
-//        echo "<pre>";
-//            var_dump($formulas);
-//        echo "</pre>";
-        if (count($values) == 0) {
-            return "No data found";
-        }
-
-        for($i=0;$i<count($values);$i++ ){
-            for($j=0;$j<count($values[$i]);$j++){
-                if(strpos((string)$values[$i][$j],'=')!==false){
-                    echo "Formula:  ".$values[$i][$j]."<br>";
-                    $range[$i][$j]=$values[$i][$j];
-                }
-            }
-        }
-        return $range;
-    }
-
 }
