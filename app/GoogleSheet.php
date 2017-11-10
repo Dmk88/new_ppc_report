@@ -34,9 +34,8 @@ class GoogleSheet extends Model
             return "No data found";
         }
         for($i=0;$i<count($values);$i++ ){
-            for($j=0;$j<count($values($i));$j++){
-                $cell=$values[$i][$j];
-                if(strpos((string)$cell,'=')!==false){
+            for($j=0;$j<count($values[$i]);$j++){
+                if(strpos((string)$values[$i][$j],'=')!==false){
                     $range[$i][$j]=$values[$i][$j];
                 }
             }
