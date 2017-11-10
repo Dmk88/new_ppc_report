@@ -227,7 +227,7 @@ clientCustomerId = "' . $customer_id . '"
                 echo "Error update range to Sheet!";
             }
             else {
-                echo "Statistics for the arbitary month have been updated!<br>";d
+                echo "Statistics for the arbitary month have been updated!<br>";
             }
         }
         else {
