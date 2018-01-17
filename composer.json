@@ -18,7 +18,8 @@
         "microsoft/bingads": "v0.11.5.5",
         "nesbot/carbon": "^1.22",
         "php-http/curl-client": "*",
-        "php-http/message": "*"
+        "php-http/message": "*",
+        "yajra/laravel-datatables": "^1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.1",

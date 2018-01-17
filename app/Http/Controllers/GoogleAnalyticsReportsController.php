@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Api\GoogleClient;
-use Carbon\Carbon;
+use App\GAReportsCluster;
+use App\GAReportsPosts;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_AnalyticsReporting_DateRange;
@@ -13,32 +14,76 @@ use Google_Service_AnalyticsReporting_ReportRequest;
 use Google_Service_Sheets;
 use Google_Service_Sheets_ClearValuesRequest;
 use Google_Service_Sheets_ValueRange;
+use Illuminate\Http\Request;
+use Yajra\Datatables\Datatables;
 
-class GrabDimensionsFromAnalyticsController extends Controller
+// use App\Exclusions;
+// use App\ExclusionType;
+// use App\FormData;
+// use App\GoogleDoc;
+// use App\HubspotForm;
+
+class GoogleAnalyticsReportsController extends Controller
 {
     protected $VIEW_ID = '101383010';
+    protected $CURRENT_POST_ID;
+    protected $CLUSTERS;
+    protected $CLUSTERS_COLUMN = '';
+    protected $CHECKBOX = '<input %4$s type="checkbox" id="post-cluster-%1$d-%3$d" 
+    name="post-cluster[%3$d][]" value="%1$d" class="post-cluster"><label for="post-cluster-%1$d-%3$d">%2$s</label>';
     
-    protected $GOOGLE_SHEETS_ID = '1i1_0ewGNcXekSpLRx_C8UnKMOpHZMzHAZl7M0XDbL_I';
+    public function index(Request $request)
+    {
+        // $google_docs = GoogleDoc::all();
+        //
+        // if ($request->ajax()) {
+        //     return Datatables::of($google_docs)->make(true);
+        // }
+        
+        return view('ga_reports.index', [
+            'ga_reports' => 1,
+        ]);
+    }
     
-    protected $GOOGLE_SHEETS_RANGE = 'A1:Z';
-    
-    protected $GOOGLE_SHEETS_DEFAULT_ROW = 1;
-    
-    protected $GOOGLE_SHEETS_CURRENT_ROW = 1;
-    
-    // protected $GOOGLE_REPORT_START_DATE = "7daysAgo";
-    protected $GOOGLE_REPORT_START_DATE = "2017-12-01";
-    
-    protected $GOOGLE_REPORT_END_DATE = "2017-12-31";
-    // protected $GOOGLE_REPORT_END_DATE = "today";
-    
-    protected $GOOGLE_REPORT_METRIC_TIME_TYPE = "TIME";
-    
-    protected $dimensions = [
-        'ga:dimension1' => 'Category',
-        'ga:dimension2' => 'Tag',
-        'ga:dimension3' => 'Page',
-    ];
+    public function show_posts(Request $request)
+    {
+        $posts          = GAReportsPosts::all();
+        $this->CLUSTERS = GAReportsCluster::all()->toArray();
+        
+        // $ewqeqw = new GAReportsPosts();
+        // $ewqeqw->post_name = 'dqwdqw';
+        // $ewqeqw->post_url = 'http';
+        // $ewqeqw->post_wp_id = '2222';
+        // $ewqeqw->save();
+        // $ewqeqw->clusters()->attach([3,4]);
+        //
+        // dd($ewqeqw);
+        if ($request->ajax()) {
+            return Datatables::of($posts)->addColumn('clusters', function ($post) {
+                if (!empty($this->CLUSTERS)) {
+                    foreach ($this->CLUSTERS as $cl) {
+                        $checked = !empty($post->clusters()->where(["id" => $cl['id']])->get()->toArray());
+                        $this->CLUSTERS_COLUMN .= sprintf($this->CHECKBOX, $cl['id'], $cl['cluster_name'], $post->id,
+                            $checked ? 'checked' : '');
+                    }
+                }
+                $result                = $this->CLUSTERS_COLUMN;
+                $this->CLUSTERS_COLUMN = '';
+                
+                return $result;
+                // $this->CURRENT_POST_ID = $post->id;
+                //
+                // return GAReportsPosts::whereId($post->id)->first()->clusters()->get()->map(function ($cluster) {
+                //     return sprintf($this->CHECKBOX, $cluster->id, $cluster->cluster_name, $this->CURRENT_POST_ID, '');
+                // })->implode(' ');
+            })->rawColumns(['clusters'])->make(true);
+        }
+        
+        // dd($posts);
+        return view('ga_reports.posts.index', [
+            'posts' => $posts,
+        ]);
+    }
     
     function getReport($analytics, $viewID = '101383010', $dimensionName = 'ga:dimension1')
     {
