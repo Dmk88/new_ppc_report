@@ -8,6 +8,7 @@
         "php": ">=7.0.0",
         "artesaos/laravel-linkedin": "*",
         "cpcstrategy/bing-ads-sdk-php": "~3.0",
+        "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~3.3",
         "google/apiclient": "^2.0",
         "googleads/googleads-php-lib": "^29.0",
@@ -18,7 +19,8 @@
         "microsoft/bingads": "v0.11.5.5",
         "nesbot/carbon": "^1.22",
         "php-http/curl-client": "*",
-        "php-http/message": "*"
+        "php-http/message": "*",
+        "yajra/laravel-datatables": "^1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.1",
