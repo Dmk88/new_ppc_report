@@ -5,40 +5,39 @@
 {{--@endpush--}}
 
 {{--@section('content')--}}
-    {{--<table class="table table-bordered" id="posts-data-table">--}}
-        {{--<thead>--}}
-        {{--<tr>--}}
-            {{--<th>ID</th>--}}
-            {{--<th>Post Name</th>--}}
-            {{--<th>Post URL</th>--}}
-            {{--<th>WP ID</th>--}}
-            {{--<th>Clusters</th>--}}
-            {{--<th>GA Report</th>--}}
-        {{--</tr>--}}
-        {{--</thead>--}}
-    {{--</table>--}}
+{{--<table class="table table-bordered" id="posts-data-table">--}}
+{{--<thead>--}}
+{{--<tr>--}}
+{{--<th>ID</th>--}}
+{{--<th>Post Name</th>--}}
+{{--<th>Post URL</th>--}}
+{{--<th>WP ID</th>--}}
+{{--<th>Clusters</th>--}}
+{{--<th>GA Report</th>--}}
+{{--</tr>--}}
+{{--</thead>--}}
+{{--</table>--}}
 {{--@stop--}}
 
 {{--@push('scripts')--}}
 {{--<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>--}}
 {{--<script>--}}
-    {{--$(function() {--}}
-        {{--$('#posts-data-table').DataTable({--}}
-            {{--processing: true,--}}
-            {{--serverSide: true,--}}
-            {{--ajax: '{!! route('datatables') !!}',--}}
-            {{--columns: [--}}
-                {{--{ data: 'id', name: 'id' },--}}
-                {{--{ data: 'name', name: 'name' },--}}
-                {{--{ data: 'email', name: 'email' },--}}
-                {{--{ data: 'created_at', name: 'created_at' },--}}
-                {{--{ data: 'updated_at', name: 'updated_at' }--}}
-            {{--]--}}
-        {{--});--}}
-    {{--});--}}
+{{--$(function() {--}}
+{{--$('#posts-data-table').DataTable({--}}
+{{--processing: true,--}}
+{{--serverSide: true,--}}
+{{--ajax: '{!! route('datatables') !!}',--}}
+{{--columns: [--}}
+{{--{ data: 'id', name: 'id' },--}}
+{{--{ data: 'name', name: 'name' },--}}
+{{--{ data: 'email', name: 'email' },--}}
+{{--{ data: 'created_at', name: 'created_at' },--}}
+{{--{ data: 'updated_at', name: 'updated_at' }--}}
+{{--]--}}
+{{--});--}}
+{{--});--}}
 {{--</script>--}}
 {{--@endpush--}}
-
 
 
 @extends('layouts.app')
@@ -69,11 +68,11 @@
             </table>
         </div>
         {{--@if(!$flags['grab'])--}}
-            {{--<div class="panel-body">--}}
-                {{--{{ Form::open(array('url' => route( 'form_data.pushToHS', [ 'id' => $google_doc->id ]) )) }}--}}
-                {{--{{ Form::submit('Push To HS', array('class' => 'btn btn-block btn-success')) }}--}}
-                {{--{{ Form::close() }}--}}
-            {{--</div>--}}
+        {{--<div class="panel-body">--}}
+        {{--{{ Form::open(array('url' => route( 'form_data.pushToHS', [ 'id' => $google_doc->id ]) )) }}--}}
+        {{--{{ Form::submit('Push To HS', array('class' => 'btn btn-block btn-success')) }}--}}
+        {{--{{ Form::close() }}--}}
+        {{--</div>--}}
         {{--@endif--}}
     </div>
 @endsection
@@ -106,28 +105,28 @@
 //                }
             ]
         });
-//        $('#dateSearch').on('click', function () {
-//            formTable.draw();
-//        });
-//        formTable.on('click', '.delete_form_data_row', function (e) {
-//            e.preventDefault();
-//            $.ajaxSetup({
-//                headers: {
-//                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-//                }
-//            });
-//            $.ajax({
-//                url: '/form_data/' + $(this).closest('tr').find('.id-elem').text(),
-//                type: 'DELETE',
-//                dataType: 'json',
-//                data: {method: '_DELETE', submit: true}
-//            }).always(function (data) {
-//                formTable
-//                        .row($(this).parents('tr'))
-//                        .remove()
-//                        .draw();
-//            });
-//        });
+        formTable.on('change', '.post-cluster-block input', function (e) {
+            console.log('push');
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            var dataObj = {
+                cluster: $(this).prop('value'),
+                value: $(this).prop('checked')
+            };
+            console.log(JSON.stringify(dataObj));
+            $.ajax({
+                url: '/ga_reports_posts/change_post_cluster/' + $(this).attr('data-post'),
+                type: 'POST',
+                contentType: "json",
+                processData: false,
+                data: JSON.stringify(dataObj)
+            }).always(function (data) {
+                formTable.draw();
+            });
+        });
     });
 </script>
 @endpush

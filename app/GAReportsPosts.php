@@ -11,4 +11,12 @@ class GAReportsPosts extends Model
         return $this->belongsToMany(GAReportsCluster::class, 'cluster_post', 'post_id', 'cluster_id')
             ->withTimestamps();
     }
+    
+    public function setCluster($cluster, $value){
+        if($value){
+            $this->clusters()->attach($cluster);
+        }else{
+            $this->clusters()->detach($cluster);
+        }
+    }
 }

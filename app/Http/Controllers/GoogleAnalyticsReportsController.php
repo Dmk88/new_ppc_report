@@ -29,8 +29,9 @@ class GoogleAnalyticsReportsController extends Controller
     protected $CURRENT_POST_ID;
     protected $CLUSTERS;
     protected $CLUSTERS_COLUMN = '';
-    protected $CHECKBOX = '<input %4$s type="checkbox" id="post-cluster-%1$d-%3$d" 
-    name="post-cluster[%3$d][]" value="%1$d" class="post-cluster"><label for="post-cluster-%1$d-%3$d">%2$s</label>';
+    protected $CHECKBOX = '<div class="post-cluster-block"><input %4$s type="checkbox" id="post-cluster-%1$d-%3$d" 
+    name="post-cluster[%3$d][]" data-post="%3$d" value="%1$d" class="post-cluster"><label 
+    for="post-cluster-%1$d-%3$d">%2$s</label></div>';
     
     public function index(Request $request)
     {
