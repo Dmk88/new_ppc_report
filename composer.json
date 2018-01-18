@@ -8,6 +8,7 @@
         "php": ">=7.0.0",
         "artesaos/laravel-linkedin": "*",
         "cpcstrategy/bing-ads-sdk-php": "~3.0",
+        "doctrine/dbal": "^2.5",
         "fideloper/proxy": "~3.3",
         "google/apiclient": "^2.0",
         "googleads/googleads-php-lib": "^29.0",

@@ -32,3 +32,4 @@ Route::get('/ga_reports_cluster', 'GoogleAnalyticsReportsClustersController@show
 Route::delete('/ga_reports_clusters/{id}', 'GoogleAnalyticsReportsClustersController@delete');
 
 Route::post('/ga_reports_posts/change_post_cluster/{id}', 'GoogleAnalyticsReportsPostsController@change_post_cluster');
+Route::get('/ga_reports_posts/grab_posts', 'GoogleAnalyticsReportsPostsController@grab_posts');

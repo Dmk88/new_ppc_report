@@ -5,11 +5,6 @@ namespace App\Http\Controllers;
 use App\GAReportsPosts;
 use Illuminate\Http\Request;
 
-// use App\ExclusionType;
-// use App\FormData;
-// use App\GoogleDoc;
-// use App\GAReportsCluster;
-
 class GoogleAnalyticsReportsPostsController extends Controller
 {
     public function change_post_cluster(Request $request)
@@ -29,6 +24,32 @@ class GoogleAnalyticsReportsPostsController extends Controller
     
     public function grab_posts(Request $request)
     {
-
+        $url      = $_ENV['ALTOROS_BLOG_WP_REST_API_POSTS_ENDPOINT_CUSTOM'];
+        $page     = 1;
+        $per_page = 100;
+        do {
+            $content = @file_get_contents($url . "?page=$page&per_page=$per_page");
+            if ($content) {
+                $posts = json_decode($content, true);
+                if ($posts) {
+                    foreach ($posts as $post) {
+                        if (GAReportsPosts::validate([
+                            'post_url'   => $post['post_name'],
+                            'post_name'  => $post['post_title'],
+                            'post_wp_id' => $post['ID'],
+                        ])
+                        ) {
+                            $postObj             = new GAReportsPosts();
+                            $postObj->post_name  = $post['post_title'];
+                            $postObj->post_url   = $post['post_name'];
+                            $postObj->post_wp_id = $post['ID'];
+                            $postObj->save();
+                            echo $post['ID'] . '<br>';
+                        }
+                    }
+                }
+            }
+            $page++;
+        } while ($content);
     }
 }

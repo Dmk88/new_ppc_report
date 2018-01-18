@@ -124,7 +124,7 @@
                 processData: false,
                 data: JSON.stringify(dataObj)
             }).always(function (data) {
-                formTable.draw();
+//                formTable.draw();
             });
         });
     });

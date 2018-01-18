@@ -32,6 +32,7 @@ class GoogleAnalyticsReportsController extends Controller
     protected $CHECKBOX = '<div class="post-cluster-block"><input %4$s type="checkbox" id="post-cluster-%1$d-%3$d" 
     name="post-cluster[%3$d][]" data-post="%3$d" value="%1$d" class="post-cluster"><label 
     for="post-cluster-%1$d-%3$d">%2$s</label></div>';
+    protected $POST_URL = '<a href="%s">%s</a>';
     
     public function index(Request $request)
     {
@@ -77,7 +78,9 @@ class GoogleAnalyticsReportsController extends Controller
                 // return GAReportsPosts::whereId($post->id)->first()->clusters()->get()->map(function ($cluster) {
                 //     return sprintf($this->CHECKBOX, $cluster->id, $cluster->cluster_name, $this->CURRENT_POST_ID, '');
                 // })->implode(' ');
-            })->rawColumns(['clusters'])->make(true);
+            })->addColumn('post_url', function ($post) {
+                return sprintf($this->POST_URL, $_ENV['ALTOROS_BLOG_WP'] . $post->post_url, $post->post_name);
+            })->rawColumns(['post_url','clusters'])->make(true);
         }
         
         // dd($posts);
