@@ -5,35 +5,40 @@
 @endpush
 
 @section('content')
-    <table class="table table-bordered" id="users-table">
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Post Name</th>
-            <th>Post URL</th>
-            <th>Clusters</th>
-            <th>GA Report111</th>
-        </tr>
-        </thead>
-    </table>
+    <div class="container">
+        <div class="panel-body">
+            @include('common.errors')
+            <div class="form-horizontal">
+                {{ csrf_field() }}
+            </div>
+        </div>
+        <a href="javascript:void(0);" class="btn btn-primary" id="get_report">Get Report</a>
+    </div>
 @stop
 
 @push('scripts')
-<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
-{{--<script>--}}
-    {{--$(function() {--}}
-        {{--$('#users-table').DataTable({--}}
-            {{--processing: true,--}}
-            {{--serverSide: true,--}}
-            {{--ajax: '{!! route('datatables') !!}',--}}
-            {{--columns: [--}}
-                {{--{ data: 'id', name: 'id' },--}}
-                {{--{ data: 'name', name: 'name' },--}}
-                {{--{ data: 'email', name: 'email' },--}}
-                {{--{ data: 'created_at', name: 'created_at' },--}}
-                {{--{ data: 'updated_at', name: 'updated_at' }--}}
-            {{--]--}}
-        {{--});--}}
-    {{--});--}}
-{{--</script>--}}
+<script>
+    $(function () {
+        $('#app').on('click', '#get_report', function (e) {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            var dataObj = {
+                action: 'get_report'
+            };
+            $.ajax({
+                url: '/ga_reports',
+                type: 'POST',
+                contentType: "json",
+                processData: false,
+                data: JSON.stringify(dataObj)
+            }).always(function (data) {
+                var report = JSON.parse(data);
+                console.log(report);
+            });
+        });
+    });
+</script>
 @endpush

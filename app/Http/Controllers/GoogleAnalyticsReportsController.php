@@ -8,25 +8,26 @@ use App\GAReportsPosts;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_AnalyticsReporting_DateRange;
+use Google_Service_AnalyticsReporting_DimensionFilter;
+use Google_Service_AnalyticsReporting_DimensionFilterClause;
 use Google_Service_AnalyticsReporting_GetReportsRequest;
 use Google_Service_AnalyticsReporting_Metric;
 use Google_Service_AnalyticsReporting_ReportRequest;
-use Google_Service_Sheets;
-use Google_Service_Sheets_ClearValuesRequest;
-use Google_Service_Sheets_ValueRange;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 
-// use App\Exclusions;
-// use App\ExclusionType;
-// use App\FormData;
-// use App\GoogleDoc;
-// use App\HubspotForm;
 
 class GoogleAnalyticsReportsController extends Controller
 {
     protected $VIEW_ID = '101383010';
-    protected $CURRENT_POST_ID;
+    protected $dimensions = [
+        'ga:pagePath' => 'Page Path',
+    ];
+    protected $GOOGLE_REPORT_METRIC_TIME_TYPE = "TIME";
+    protected $GOOGLE_REPORT_START_DATE = "2017-12-01";
+    
+    protected $GOOGLE_REPORT_END_DATE = "2017-12-31";
+    // protected $CURRENT_POST_ID;
     protected $CLUSTERS;
     protected $CLUSTERS_COLUMN = '';
     protected $CHECKBOX = '<div class="post-cluster-block"><input %4$s type="checkbox" id="post-cluster-%1$d-%3$d" 
@@ -36,15 +37,7 @@ class GoogleAnalyticsReportsController extends Controller
     
     public function index(Request $request)
     {
-        // $google_docs = GoogleDoc::all();
-        //
-        // if ($request->ajax()) {
-        //     return Datatables::of($google_docs)->make(true);
-        // }
-        
-        return view('ga_reports.index', [
-            'ga_reports' => 1,
-        ]);
+        return view('ga_reports.index');
     }
     
     public function show_posts(Request $request)
@@ -52,14 +45,6 @@ class GoogleAnalyticsReportsController extends Controller
         $posts          = GAReportsPosts::all();
         $this->CLUSTERS = GAReportsCluster::all()->toArray();
         
-        // $ewqeqw = new GAReportsPosts();
-        // $ewqeqw->post_name = 'dqwdqw';
-        // $ewqeqw->post_url = 'http';
-        // $ewqeqw->post_wp_id = '2222';
-        // $ewqeqw->save();
-        // $ewqeqw->clusters()->attach([3,4]);
-        //
-        // dd($ewqeqw);
         if ($request->ajax()) {
             return Datatables::of($posts)->addColumn('clusters', function ($post) {
                 if (!empty($this->CLUSTERS)) {
@@ -80,49 +65,68 @@ class GoogleAnalyticsReportsController extends Controller
                 // })->implode(' ');
             })->addColumn('post_url', function ($post) {
                 return sprintf($this->POST_URL, $_ENV['ALTOROS_BLOG_WP'] . $post->post_url, $post->post_name);
-            })->rawColumns(['post_url','clusters'])->make(true);
+            })->rawColumns(['post_url', 'clusters'])->make(true);
         }
         
-        // dd($posts);
         return view('ga_reports.posts.index', [
             'posts' => $posts,
         ]);
     }
     
-    function getReport($analytics, $viewID = '101383010', $dimensionName = 'ga:dimension1')
-    {
+    function getReport(
+        $analytics,
+        $viewID = '101383010',
+        $dimensionName = 'ga:pagePath',
+        $dimensionFilter = '/blog/'
+    ) {
         $dateRange = new Google_Service_AnalyticsReporting_DateRange();
         $dateRange->setStartDate($this->GOOGLE_REPORT_START_DATE);
         $dateRange->setEndDate($this->GOOGLE_REPORT_END_DATE);
         
-        $sessions = new Google_Service_AnalyticsReporting_Metric();
-        $sessions->setExpression("ga:sessions");
-        $sessions->setAlias("sessions");
+        // $sessions = new Google_Service_AnalyticsReporting_Metric();
+        // $sessions->setExpression("ga:sessions");
+        // $sessions->setAlias("sessions");
         
         $pageviews = new Google_Service_AnalyticsReporting_Metric();
         $pageviews->setExpression("ga:pageviews");
         $pageviews->setAlias("pageviews");
         
+        $uniquePageviews = new Google_Service_AnalyticsReporting_Metric();
+        $uniquePageviews->setExpression("ga:uniquePageviews");
+        $uniquePageviews->setAlias("uniquePageviews");
+        
         $bounceRate = new Google_Service_AnalyticsReporting_Metric();
         $bounceRate->setExpression("ga:bounceRate");
         $bounceRate->setAlias("bounceRate");
         
-        $newUsers = new Google_Service_AnalyticsReporting_Metric();
-        $newUsers->setExpression("ga:newUsers");
-        $newUsers->setAlias("newUsers");
+        // $newUsers = new Google_Service_AnalyticsReporting_Metric();
+        // $newUsers->setExpression("ga:newUsers");
+        // $newUsers->setAlias("newUsers");
         
         $avgSessionDuration = new Google_Service_AnalyticsReporting_Metric();
         $avgSessionDuration->setExpression("ga:avgSessionDuration");
         $avgSessionDuration->setAlias("avgSessionDuration");
         
-        $dimension = new \Google_Service_AnalyticsReporting_Dimension();
-        $dimension->setName($dimensionName);
+        $dimension1 = new \Google_Service_AnalyticsReporting_Dimension();
+        $dimension1->setName($dimensionName);
+        
+        $dimension2 = new \Google_Service_AnalyticsReporting_Dimension();
+        $dimension2->setName('ga:channelGrouping');
+        
+        $dimensionFilter = new Google_Service_AnalyticsReporting_DimensionFilter();
+        $dimensionFilter->setDimensionName($dimensionName);
+        $dimensionFilter->setOperator('PARTIAL');
+        $dimensionFilter->setExpressions(array($dimensionFilter));
+        
+        $dimensionFilterClause = new Google_Service_AnalyticsReporting_DimensionFilterClause();
+        $dimensionFilterClause->setFilters(array($dimensionFilter));
         
         $request = new Google_Service_AnalyticsReporting_ReportRequest();
         $request->setViewId($viewID);
         $request->setDateRanges($dateRange);
-        $request->setMetrics(array($sessions, $newUsers, $bounceRate, $avgSessionDuration));
-        $request->setDimensions($dimension);
+        $request->setMetrics(array($pageviews, $uniquePageviews, $bounceRate, $avgSessionDuration));
+        $request->setDimensions(array($dimension1, $dimension2));
+        $request->setDimensionFilterClauses(array($dimensionFilterClause));
         
         $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
         $body->setReportRequests(array($request));
@@ -133,62 +137,6 @@ class GoogleAnalyticsReportsController extends Controller
     protected function getTimeFromSeconds($seconds)
     {
         return gmdate('H:i:s', $seconds);
-    }
-    
-    protected function clearSheet($service)
-    {
-        $requestBody = new Google_Service_Sheets_ClearValuesRequest();
-        
-        $response                        = $service->spreadsheets_values->clear($this->GOOGLE_SHEETS_ID,
-            $this->GOOGLE_SHEETS_RANGE, $requestBody);
-        $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_DEFAULT_ROW;
-        
-        return $response;
-    }
-    
-    protected function addClearRowToSheet($service)
-    {
-        $body      = new Google_Service_Sheets_ValueRange(array(
-            'values' => [],
-        ));
-        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
-        $optParams = ["valueInputOption" => "USER_ENTERED"];
-        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
-        if ($result) {
-            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + 1;
-        }
-        
-        return $result;
-    }
-    
-    protected function setToSheet($service, $spreadsheetRows)
-    {
-        $body      = new Google_Service_Sheets_ValueRange(array(
-            'values' => $spreadsheetRows,
-        ));
-        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
-        $optParams = ["valueInputOption" => "USER_ENTERED"];
-        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
-        if ($result) {
-            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + count($spreadsheetRows);
-        }
-        
-        return $result;
-    }
-    
-    protected function setReportToSheet($service, $spreadsheetRows)
-    {
-        $body      = new Google_Service_Sheets_ValueRange(array(
-            'values' => $spreadsheetRows,
-        ));
-        $range     = 'A' . $this->GOOGLE_SHEETS_CURRENT_ROW . ':Z';
-        $optParams = ["valueInputOption" => "USER_ENTERED"];
-        $result    = $service->spreadsheets_values->update($this->GOOGLE_SHEETS_ID, $range, $body, $optParams);
-        if ($result) {
-            $this->GOOGLE_SHEETS_CURRENT_ROW = $this->GOOGLE_SHEETS_CURRENT_ROW + count($spreadsheetRows);
-        }
-        
-        return $result;
     }
     
     protected function getReportRows($report)
@@ -235,8 +183,19 @@ class GoogleAnalyticsReportsController extends Controller
         return $reportRows;
     }
     
-    public function grab()
+    public function get(Request $request)
     {
+        $result = ['message' => 'error'];
+        $data   = json_decode($request->getContent());
+        if (empty($data->action)) {
+            return json_encode($result);
+        }
+        
+        $clusters = GAReportsCluster::all();
+        if (empty($clusters)) {
+            return json_encode($result);
+        }
+        
         $default = [
             'APPLICATION_NAME'   => 'Google API',
             'CREDENTIALS_PATH'   => app_path() . '/ApiSources/google-analytics.json',
@@ -246,33 +205,27 @@ class GoogleAnalyticsReportsController extends Controller
                 Google_Service_Analytics::ANALYTICS,
                 Google_Service_Analytics::ANALYTICS_EDIT,
                 Google_Service_Analytics::ANALYTICS_PROVISION,
-                Google_Service_Sheets::SPREADSHEETS,
-                Google_Service_Sheets::SPREADSHEETS_READONLY,
             ),
         ];
         $client  = GoogleClient::get_instance($default);
         
-        $serviceSheets = new Google_Service_Sheets($client->client);
-        
-        $this->clearSheet($serviceSheets);
-        $dates = [
-            [
-                // 'Start date: ' . (new Carbon($this->GOOGLE_REPORT_START_DATE))->format('M d, Y'),
-                // 'End date: ' . (new Carbon($this->GOOGLE_REPORT_END_DATE))->format('M d, Y'),
-                'Start date: ' . $this->GOOGLE_REPORT_START_DATE,
-                'End date: ' . $this->GOOGLE_REPORT_END_DATE,
-            ],
-        ];
-        $this->setToSheet($serviceSheets, $dates);
-        
-        $this->addClearRowToSheet($serviceSheets);
-        
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
-        foreach ($this->dimensions as $dimension => $name) {
-            $responseAnalyticsReport = $this->getReport($serviceAnalytics, $this->VIEW_ID, $dimension);
+        foreach ($this->dimensions as $k => $v) {
+            foreach ($clusters as $cluster) {
+                $posts = $cluster->posts();
+                foreach ($posts as $post){
+                    dd($cluster, $post);
+                }
+                
+            }
+            $responseAnalyticsReport = $this->getReport($serviceAnalytics, $this->VIEW_ID, $k);
             $spreadsheetRows         = $this->getReportRows($responseAnalyticsReport[0]);
-            $this->setToSheet($serviceSheets, $spreadsheetRows);
-            $this->addClearRowToSheet($serviceSheets);
         }
+        if (!empty($spreadsheetRows)) {
+            $result['report'] = $spreadsheetRows;
+        }
+        
+        return json_encode($result);
+        
     }
 }

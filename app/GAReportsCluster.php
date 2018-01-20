@@ -8,7 +8,6 @@ class GAReportsCluster extends Model
 {
     public function posts()
     {
-        return $this->belongsToMany('App\GAReportsPosts')
-            ->withTimestamps();
+        return $this->belongsToMany(GAReportsPosts::class, 'cluster_post', 'cluster_id', 'post_id')->withTimestamps();
     }
 }

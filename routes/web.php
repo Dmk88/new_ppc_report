@@ -21,8 +21,10 @@ Route::get('/grab_marketing_stat_linkedin', 'grabMarketingStat@grabLinkedin');
 Route::get('/grab_google_analytics_reports', 'GrabDimensionsFromAnalyticsController@grab');
 
 Route::get('/ga_reports', 'GoogleAnalyticsReportsController@index');
+Route::post('/ga_reports', 'GoogleAnalyticsReportsController@get');
 
-Route::get('/ga_reports_posts', ['uses' => 'GoogleAnalyticsReportsController@show_posts', 'as' => 'ga_reports.posts.form_data']);
+Route::get('/ga_reports_posts',
+    ['uses' => 'GoogleAnalyticsReportsController@show_posts', 'as' => 'ga_reports.posts.form_data']);
 
 Route::get('/ga_reports_clusters', 'GoogleAnalyticsReportsClustersController@index');
 Route::get('/ga_reports_clusters/{id}/edit', 'GoogleAnalyticsReportsClustersController@show_for_edit');
