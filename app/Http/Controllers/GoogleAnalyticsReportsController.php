@@ -23,6 +23,76 @@ class GoogleAnalyticsReportsController extends Controller
     protected $dimensions = [
         'ga:pagePath' => 'Page Path',
     ];
+    protected $null_stat = [
+        'pageviews'          => 0,
+        'uniquePageviews'    => 0,
+        'bounceRate'         => 0,
+        'avgSessionDuration' => 0,
+    ];
+    protected $summary;
+    public $sources = [
+        'Direct'            => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Organic Search'    => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Social'            => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Email'             => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Affiliates'        => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Referral'          => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Paid Search'       => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Other Advertising' => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        'Display'           => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+        '(Other)'           => [
+            'pageviews'          => 0,
+            'uniquePageviews'    => 0,
+            'bounceRate'         => 0,
+            'avgSessionDuration' => 0,
+        ],
+    ];
+    protected $post_count = 0;
     protected $GOOGLE_REPORT_METRIC_TIME_TYPE = "TIME";
     protected $GOOGLE_REPORT_START_DATE = "2017-12-01";
     
@@ -77,7 +147,7 @@ class GoogleAnalyticsReportsController extends Controller
         $analytics,
         $viewID = '101383010',
         $dimensionName = 'ga:pagePath',
-        $dimensionFilter = '/blog/'
+        $dimensionFilterUrl = '/blog/'
     ) {
         $dateRange = new Google_Service_AnalyticsReporting_DateRange();
         $dateRange->setStartDate($this->GOOGLE_REPORT_START_DATE);
@@ -116,7 +186,7 @@ class GoogleAnalyticsReportsController extends Controller
         $dimensionFilter = new Google_Service_AnalyticsReporting_DimensionFilter();
         $dimensionFilter->setDimensionName($dimensionName);
         $dimensionFilter->setOperator('PARTIAL');
-        $dimensionFilter->setExpressions(array($dimensionFilter));
+        $dimensionFilter->setExpressions(array($dimensionFilterUrl));
         
         $dimensionFilterClause = new Google_Service_AnalyticsReporting_DimensionFilterClause();
         $dimensionFilterClause->setFilters(array($dimensionFilter));
@@ -147,14 +217,14 @@ class GoogleAnalyticsReportsController extends Controller
         $metricHeaders     = $header->getMetricHeader()->getMetricHeaderEntries();
         $rows              = $report->getData()->getRows();
         $reportRowsHeaders = [];
-        if (!empty($header)) {
-            array_push($reportRowsHeaders, $header[0] . ' name: ' . $this->dimensions[$header[0]]);
-        }
-        foreach ($metricHeaders as $metricHeader) {
-            array_push($reportRowsHeaders, 'Metric name: ' . $metricHeader->name . ' [' . $metricHeader->type . ']');
-        }
+        // if (!empty($header)) {
+        //     array_push($reportRowsHeaders, $header[0] . ' name: ' . $this->dimensions[$header[0]]);
+        // }
+        // foreach ($metricHeaders as $metricHeader) {
+        //     array_push($reportRowsHeaders, 'Metric name: ' . $metricHeader->name . ' [' . $metricHeader->type . ']');
+        // }
         
-        array_push($reportRows, $reportRowsHeaders);
+        // array_push($reportRows, $reportRowsHeaders);
         
         foreach ($rows as $index => $row) {
             $reportRow = [];
@@ -170,7 +240,8 @@ class GoogleAnalyticsReportsController extends Controller
                     if (!empty($metricValues)) {
                         foreach ($metricValues as $number => $metricValue) {
                             if ($metricHeaders[$number]->type === $this->GOOGLE_REPORT_METRIC_TIME_TYPE) {
-                                $metricValue = $this->getTimeFromSeconds($metricValue);
+                                // $metricValue = $this->getTimeFromSeconds($metricValue);
+                                $metricValue = $metricValue;
                             }
                             array_push($reportRow, $metricValue);
                         }
@@ -181,6 +252,54 @@ class GoogleAnalyticsReportsController extends Controller
         }
         
         return $reportRows;
+    }
+    
+    protected function take_summary($report_values, $c = 100)
+    {
+        if (empty($report_values)) {
+            return null;
+        }
+        foreach ($report_values as $key => $report_value) {
+            // if($c == 1 && $key == 3 ){
+            //
+            //     $this->sources[$report_value[1]]['pageviews'] += (int)$report_value[2];
+            //     $this->sources[$report_value[1]]['uniquePageviews'] += (int)$report_value[3];
+            //     $this->sources[$report_value[1]]['bounceRate'] += (float)$report_value[4];
+            //     $this->sources[$report_value[1]]['avgSessionDuration'] += (float)$report_value[5];
+            //     dd($this->sources, $report_value, $key);
+            // }
+            $this->summary['pageviews'] += $report_value[2];
+            $this->summary['uniquePageviews'] += $report_value[3];
+            $this->summary['bounceRate'] += $report_value[4];
+            $this->summary['avgSessionDuration'] += $report_value[5];
+            // if (!in_array($report_value[1], $this->sources)) {
+            //     // array_push($this->sources, $report_value[1]);
+            //     $this->sources[$report_value[1]]['pageviews']          = (int)$report_value[2];
+            //     $this->sources[$report_value[1]]['uniquePageviews']    = (int)$report_value[3];
+            //     $this->sources[$report_value[1]]['bounceRate']         = (float)$report_value[4];
+            //     $this->sources[$report_value[1]]['avgSessionDuration'] = (float)$report_value[5];
+            // }
+            // dd($this->sources[$report_value[1]]['pageviews'], (int)$report_value[2], ($this->sources[$report_value[1]]['pageviews'] +
+            //     (int)$report_value[2]));
+            // var_dump($report_value[1]);
+            // $int = $this->sources[$report_value[1]]['pageviews'] + (int)$report_value[2];
+            // var_dump($int, $this->sources[$report_value[1]]['pageviews'], $report_value[2]);
+            // if($c == 1 && $key == 1){
+            // if($c == 2 ){
+            //     dd($this->sources, $report_value, $key);
+            //     $this->sources[$report_value[1]]['pageviews'] += (int)$report_value[2];
+            //     $this->sources[$report_value[1]]['uniquePageviews'] += (int)$report_value[3];
+            //     $this->sources[$report_value[1]]['bounceRate'] += (float)$report_value[4];
+            //     $this->sources[$report_value[1]]['avgSessionDuration'] += (float)$report_value[5];
+            //
+            // }
+            
+            $this->sources[$report_value[1]]['pageviews'] += (int)$report_value[2];
+            $this->sources[$report_value[1]]['uniquePageviews'] += (int)$report_value[3];
+            $this->sources[$report_value[1]]['bounceRate'] += (float)$report_value[4];
+            $this->sources[$report_value[1]]['avgSessionDuration'] += (float)$report_value[5];
+            
+        }
     }
     
     public function get(Request $request)
@@ -210,19 +329,52 @@ class GoogleAnalyticsReportsController extends Controller
         $client  = GoogleClient::get_instance($default);
         
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
+        $report           = [];
+        $this->summary    = $this->null_stat;
+        foreach ($this->sources as $source) {
+            $source = $this->null_stat;
+        }
         foreach ($this->dimensions as $k => $v) {
             foreach ($clusters as $cluster) {
-                $posts = $cluster->posts();
-                foreach ($posts as $post){
-                    dd($cluster, $post);
+                $posts = $cluster->posts()->get();
+                if (empty($posts)) {
+                    continue;
                 }
-                
+                foreach ($posts as $post) {
+                    // dd($serviceAnalytics, $this->VIEW_ID, $k, $post->post_url);
+                    // if ($ccc == 1) {
+                    //     dd($serviceAnalytics, $this->VIEW_ID, $k, $post->post_url);
+                    //     dd($this->sources, $spreadsheetRows);
+                    //     dd($posts, $this->sources, $this->summary);
+                    // }
+                    $responseAnalyticsReport = $this->getReport($serviceAnalytics, $this->VIEW_ID, $k, $post->post_url);
+                    $spreadsheetRows         = $this->getReportRows($responseAnalyticsReport[0]);
+                    $this->take_summary($spreadsheetRows, $this->post_count);
+                    $this->post_count++;
+                }
+                $this->summary['bounceRate']         = round($this->summary['bounceRate'] / $this->post_count, 2);
+                $this->summary['avgSessionDuration'] = $this->getTimeFromSeconds(round($this->summary['avgSessionDuration'] / $this->post_count));
+                foreach ($this->sources as $key_s => $source) {
+                    $this->sources[$key_s]['bounceRate']         = round($this->sources[$key_s]['bounceRate'] / $this->post_count,
+                        2);
+                    $this->sources[$key_s]['avgSessionDuration'] = $this->getTimeFromSeconds(round($this->sources[$key_s]['avgSessionDuration'] / $this->post_count));
+                }
+                array_push($report, [
+                    'cluster' => $cluster->cluster_name,
+                    'summary' => $this->summary,
+                    'source'  => $this->sources,
+                ]);
+                $this->summary = $this->null_stat;
+                foreach ($this->sources as $key_d => $source) {
+                    $this->sources[$key_d] = $this->null_stat;
+                }
+                $this->post_count = 0;
             }
-            $responseAnalyticsReport = $this->getReport($serviceAnalytics, $this->VIEW_ID, $k);
-            $spreadsheetRows         = $this->getReportRows($responseAnalyticsReport[0]);
         }
-        if (!empty($spreadsheetRows)) {
-            $result['report'] = $spreadsheetRows;
+        // dd($report);
+        if (!empty($report)) {
+            $result['clusters'] = $report;
+            $result['message']  = 'success';
         }
         
         return json_encode($result);
