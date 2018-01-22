@@ -309,10 +309,10 @@ class GoogleAnalyticsReportsController extends Controller
         if (empty($data->action)) {
             return json_encode($result);
         }
-        if (empty($data->start_date)) {
+        if (!empty($data->start_date)) {
             $this->GOOGLE_REPORT_START_DATE = $data->start_date;
         }
-        if (empty($data->end_date)) {
+        if (!empty($data->end_date)) {
             $this->GOOGLE_REPORT_END_DATE = $data->end_date;
         }
         
