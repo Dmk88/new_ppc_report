@@ -12,17 +12,16 @@
                 {{ csrf_field() }}
             </div>
         </div>
-        <a href="javascript:void(0);" class="btn btn-primary" id="get_report">Get Report</a>
+        <div class="form-inline">
+            <div class="input-group" id="datepicker">
+                <span class="input-group-addon">Date Range:</span>
+                {!! Form::input('date', 'start_date', Carbon::now()->format('Y-m-d'), ['class' => 'form-control']) !!}
+                <span class="input-group-addon">to</span>
+                {!! Form::input('date', 'end_date', Carbon::now()->addDays(1)->format('Y-m-d'), ['class' => 'form-control']) !!}
+            </div>
+            <a href="javascript:void(0);" class="btn btn-primary" id="get_report">Get Report</a>
+        </div>
         <div class="Rtable Rtable--5cols" id="report">
-
-            {{--<div class="Rtable-cell">--}}
-                {{--<div class="summary-value"><h3><strong>Clusters</strong></h3></div>--}}
-            {{--</div>--}}
-            {{--<div class="Rtable-cell"><strong>Page Views</strong></div>--}}
-            {{--<div class="Rtable-cell"><strong>Unique Page Views</strong></div>--}}
-            {{--<div class="Rtable-cell"><strong>Bounce Rate</strong></div>--}}
-            {{--<div class="Rtable-cell"><strong>Avg Session Duration</strong></div>--}}
-
         </div>
     </div>
     <img src="/images/loading.gif" id="loading-indicator" style="display:none"/>
@@ -39,7 +38,9 @@
                 }
             });
             var dataObj = {
-                action: 'get_report'
+                action: 'get_report',
+                start_date: $('input[name="start_date"]').val(),
+                end_date: $('input[name="end_date"]').val()
             };
             $.ajax({
                 url: '/ga_reports',
