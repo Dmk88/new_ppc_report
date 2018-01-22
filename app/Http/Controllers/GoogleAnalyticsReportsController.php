@@ -94,9 +94,9 @@ class GoogleAnalyticsReportsController extends Controller
     ];
     protected $post_count = 0;
     protected $GOOGLE_REPORT_METRIC_TIME_TYPE = "TIME";
-    protected $GOOGLE_REPORT_START_DATE = "2017-12-01";
+    protected $GOOGLE_REPORT_START_DATE = "7daysAgo";
     
-    protected $GOOGLE_REPORT_END_DATE = "2017-12-31";
+    protected $GOOGLE_REPORT_END_DATE = "today";
     // protected $CURRENT_POST_ID;
     protected $CLUSTERS;
     protected $CLUSTERS_COLUMN = '';
@@ -308,6 +308,12 @@ class GoogleAnalyticsReportsController extends Controller
         $data   = json_decode($request->getContent());
         if (empty($data->action)) {
             return json_encode($result);
+        }
+        if (empty($data->start_date)) {
+            $this->GOOGLE_REPORT_START_DATE = $data->start_date;
+        }
+        if (empty($data->end_date)) {
+            $this->GOOGLE_REPORT_END_DATE = $data->end_date;
         }
         
         $clusters = GAReportsCluster::all();
