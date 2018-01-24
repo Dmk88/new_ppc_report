@@ -34,6 +34,9 @@
                 <a class="navbar-brand" href="{{ url('/ga_reports') }}">
                     GA Reports
                 </a>
+                <a class="navbar-brand" href="{{ url('/ga_reports/schedules') }}">
+                    GA Report`s Schedule
+                </a>
                 <a class="navbar-brand" href="{{ url('/ga_reports_posts') }}">
                     Posts
                 </a>

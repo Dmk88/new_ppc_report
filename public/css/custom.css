@@ -64,3 +64,7 @@ input.post-cluster {
     left: 40%;
     top: 35%;
 }
+
+.navbar-brand {
+    padding: 14px 35px;
+}
