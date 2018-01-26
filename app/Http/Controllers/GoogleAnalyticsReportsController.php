@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Api\GoogleClient;
+use App\GAReports;
 use App\GAReportsCluster;
 use App\GAReportsPosts;
 use Google_Service_Analytics;
@@ -107,7 +108,11 @@ class GoogleAnalyticsReportsController extends Controller
     
     public function index(Request $request)
     {
-        return view('ga_reports.index');
+        $reports = GAReports::all();
+        
+        return view('ga_reports.index', [
+            'reports' => $reports,
+        ]);
     }
     
     public function show_posts(Request $request)
