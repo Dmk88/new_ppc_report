@@ -68,7 +68,7 @@
         </div>
     </div>
     <div class="container">
-        <h2>Custom real-time Report</h2>
+        <h2>Custom real-time Report (it takes a lot of time)</h2>
         <div class="panel-body">
             @include('common.errors')
             <div class="form-horizontal">
