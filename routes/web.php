@@ -21,6 +21,11 @@ Route::get('/grab_marketing_stat_linkedin', 'grabMarketingStat@grabLinkedin');
 Route::get('/grab_google_analytics_reports', 'GrabDimensionsFromAnalyticsController@grab');
 
 Route::get('/ga_reports/', 'GoogleAnalyticsReportsController@index');
+Route::get('/ga_report', 'GoogleAnalyticsReportsController@show_add_form');
+Route::post('/ga_report', 'GoogleAnalyticsReportsController@add');
+Route::get('/ga_report/{id}/edit', 'GoogleAnalyticsReportsController@show_for_edit');
+Route::post('/ga_report/{id}', 'GoogleAnalyticsReportsController@edit');
+Route::delete('/ga_report/{id}', 'GoogleAnalyticsReportsController@delete');
 Route::post('/ga_reports', 'GoogleAnalyticsReportsController@get');
 
 Route::get('/ga_reports/schedules', 'GoogleAnalyticsReportsScheduleController@index');

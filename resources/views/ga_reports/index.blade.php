@@ -6,72 +6,69 @@
 
 @section('content')
     <div class="container">
-        <h2>Google Docs</h2>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Google Drive Folder`s ID</th>
-                <th>Hubspot Form</th>
-                <th>Grab from Line</th>
-                <th>&nbsp;</th>
-                <th>&nbsp;</th>
-                <th>&nbsp;</th>
-                <th>
-                    <form action="{{ url('google_doc/grab_all') }}">
-                        <button type="submit" class="center-block btn btn-default">Grab All</button>
-                    </form>
-                </th>
-            </thead>
-            <tbody>
-            @foreach ($google_docs as $google_doc)
+        <h2>Reports</h2>
+        <div class="panel-body">
+            <table class="table table-striped">
+                <thead>
                 <tr>
-                    <td>
-                        {{ $google_doc->doc_name }}
-                    </td>
-                    <td>
-                        {{ $google_doc->doc_id }}
-                    </td>
-                    <td>@if($google_doc->hubspot_form)
-                            {{ $google_doc->hubspot_form->form_name }}
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>
-                        {{ $google_doc->doc_range }}
-                    </td>
-                    <td>
-                        <form action="{{ url('google_doc/'. $google_doc->id) }}">
-                            <button type="submit" class="btn btn-success">View</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form action="{{ url('google_doc/'. $google_doc->id . '/edit/') }}">
-                            <button type="submit" class="btn btn-primary">Edit</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form action="{{ url('google_doc/'. $google_doc->id) }}" method="post">
-                            {{ csrf_field() }}
-                            {{ method_field('DELETE') }}
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                    </td>
-                    <td>
-                        <form action="{{ url('google_doc/'. $google_doc->id . '/grab/') }}">
-                            <button type="submit" class="center-block btn btn-default">Grab</button>
-                        </form>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-        <form action="{{ url('google_doc') }}" method="get">
-            <button type="submit" class="btn btn-default">Add</button>
-        </form>
+                    <th>Name</th>
+                    <th>Start Date Range</th>
+                    <th>End Date Range</th>
+                    <th>Schedule</th>
+                    <th>Acticve</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </thead>
+                <tbody>
+                @foreach ($reports as $report)
+                    <tr>
+                        <td>
+                            {{ $report->report_name }}
+                        </td>
+                        <td>
+                            {{ $report->report_start_date_range }}
+                        </td>
+                        <td>
+                            {{ $report->report_end_date_range }}
+                        </td>
+                        <td>@if($report->report_schedule)
+                                {{ $report->report_schedule->schedule_text }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td>
+                            {{ $report->report_active }}
+                        </td>
+                        <td>
+                            <form action="{{ url('ga_report/'. $report->id) }}">
+                                <button type="submit" class="btn btn-success">View</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="{{ url('ga_report/'. $report->id . '/edit/') }}">
+                                <button type="submit" class="btn btn-primary">Edit</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="{{ url('ga_report/'. $report->id) }}" method="post">
+                                {{ csrf_field() }}
+                                {{ method_field('DELETE') }}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            <form action="{{ url('ga_report') }}" method="get">
+                <button type="submit" class="btn btn-default">Add</button>
+            </form>
+        </div>
     </div>
     <div class="container">
+        <h2>Custom real-time Report</h2>
         <div class="panel-body">
             @include('common.errors')
             <div class="form-horizontal">

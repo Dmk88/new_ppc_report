@@ -6,6 +6,7 @@ use App\Api\GoogleClient;
 use App\GAReports;
 use App\GAReportsCluster;
 use App\GAReportsPosts;
+use App\GAReportsSchedule;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_AnalyticsReporting_DateRange;
@@ -113,6 +114,74 @@ class GoogleAnalyticsReportsController extends Controller
         return view('ga_reports.index', [
             'reports' => $reports,
         ]);
+    }
+    
+    public function show_add_form(Request $request)
+    {
+        $schedules = GAReportsSchedule::all();
+        
+        return view('ga_reports.ga_report_form_add', [
+            'schedules' => $schedules,
+        ]);
+    }
+    
+    public function show_for_edit(Request $request)
+    {
+        $report    = GAReports::whereId($request->id)->first();
+        $schedules = GAReportsSchedule::all();
+        
+        return view('ga_reports.ga_report_edit', [
+            'report'    => $report,
+            'schedules' => $schedules,
+        ]);
+    }
+    
+    public function edit(Request $request)
+    {
+        $this->validate($request, [
+            'report_name'             => 'required|max:70',
+            'report_start_date_range' => 'required|max:10',
+            'report_end_date_range'   => 'required|max:10',
+            'report_schedule'         => 'required|max:10',
+        ]);
+        
+        $report                          = GAReports::whereId($request->id)->first();
+        $report->report_name             = $request->report_name;
+        $report->report_start_date_range = $request->report_start_date_range;
+        $report->report_end_date_range   = $request->report_end_date_range;
+        $report->report_schedule_id      = $request->report_schedule;
+        $report->report_active           = $request->report_active ? 1 : 0;
+        $report->save();
+        
+        return redirect('/ga_reports');
+    }
+    
+    public function add(Request $request)
+    {
+        $this->validate($request, [
+            'report_name'             => 'required|max:70',
+            'report_start_date_range' => 'required|max:10',
+            'report_end_date_range'   => 'required|max:10',
+            'report_schedule'         => 'required|max:10',
+        ]);
+        
+        $report                          = new GAReports();
+        $report->report_name             = $request->report_name;
+        $report->report_start_date_range = $request->report_start_date_range;
+        $report->report_end_date_range   = $request->report_end_date_range;
+        $report->report_schedule_id      = $request->report_schedule;
+        $report->report_active           = $request->report_active ? 1 : 0;
+        $report->save();
+        
+        return redirect('/ga_reports');
+    }
+    
+    public function delete(Request $request)
+    {
+        $report = GAReports::whereId($request->id)->first();
+        $report->delete();
+        
+        return redirect('/ga_reports');
     }
     
     public function show_posts(Request $request)
