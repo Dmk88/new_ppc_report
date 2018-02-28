@@ -141,13 +141,16 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
+//        echo '<pre>';
+//        var_dump($source);
+//        exit();
         echo "Processing started!<br>";
         foreach ($source as $row){
             if(isset($row) && !empty($row)) {
                 if ($row[0]=="adwords") {
                     //get adwords account
-                    echo "Adwords AccountID=".$row[1]." - ";
-                    $customer_id = str_replace('-', '', $row[1]);
+                    echo "Adwords AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
+                    $customer_id = str_replace('-', '', isset($row[1]) && !empty($row[1]) ? $row[1] : '');
                     if (isset($row[2]) && !empty($row[2])) {
                         $compaign_id = $row[2];
                         if (count($row) > 2) {
@@ -178,7 +181,7 @@ clientCustomerId = "' . $customer_id . '"
                 }
                 elseif ($row[0]=="bing") {
                     //get bing account
-                    echo "Bing AccountID=".$row[1]." - ";
+                    echo "Bing AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
                     if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
                         array_push($this->inputArbitary, array(0, 0, 0));
                     }
@@ -189,7 +192,7 @@ clientCustomerId = "' . $customer_id . '"
                 }
                 elseif ($row[0]=="linkedin"){
                     //get linkedin account
-                    echo "Linkedin AccountID=".$row[1]." - ";
+                    echo "Linkedin AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
                     if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
                         array_push($this->inputArbitary, array(0, 0, 0));
                     }
