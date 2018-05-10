@@ -109,7 +109,7 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grab()
+    public function grab($params)
     {
         ini_set("max_execution_time", 0);
 //        var_dump(ini_get("max_execution_time"));
@@ -126,15 +126,24 @@ clientCustomerId = "' . $customer_id . '"
         $service = new Google_Service_Sheets($client->client);
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input
+        switch ($params){
+            case 'clone':  $CurrentSheet='New Detail Raw data';
+                break;
+            case 'main': $CurrentSheet='Raw data';
+                break;
+            default: echo "Invalid URL ...";
+                     exit();
+                break;
+        }
         $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:G4');
 
-        $rangeInputCurrent = 'Raw data!'.$ranges[0][1].':'.$ranges[0][2];
-        $rangeInputLast = 'Raw data!'.$ranges[0][3].':'.$ranges[0][4];
-        $rangeInputArbitary ='Raw data!'.$ranges[0][5].':'.$ranges[0][6];
-        $rangeSource ='Raw data!'.$ranges[1][1].':'.$ranges[1][2];
-        $rangeNameCurrent='Raw data!C8:E8';
-        $rangeNameLast='Raw data!F8:H8';
-        $rangeDateUpdated='Raw data!B5';
+        $rangeInputCurrent = $CurrentSheet.'!'.$ranges[0][1].':'.$ranges[0][2];
+        $rangeInputLast = $CurrentSheet.'!'.$ranges[0][3].':'.$ranges[0][4];
+        $rangeInputArbitary =$CurrentSheet.'!'.$ranges[0][5].':'.$ranges[0][6];
+        $rangeSource =$CurrentSheet.'!'.$ranges[1][1].':'.$ranges[1][2];
+        $rangeNameCurrent=$CurrentSheet.'!'.'C8:E8';
+        $rangeNameLast=$CurrentSheet.'!'.'F8:H8';
+        $rangeDateUpdated=$CurrentSheet.'!'.'B5';
         $duringCurrent=date('Ym').'01, '.date('Ymd'); // This month
         if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
             $duringArbitary = $ranges[1][5] . ', ' . $ranges[1][6]; // Arbitary month
