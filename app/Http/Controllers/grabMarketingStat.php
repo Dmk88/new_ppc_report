@@ -128,8 +128,10 @@ clientCustomerId = "' . $customer_id . '"
         //get ranges of input
         switch ($params){
             case 'clone':  $CurrentSheet='New Detail Raw data';
+                $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
                 break;
             case 'main': $CurrentSheet='Raw data';
+                $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
                 break;
             default: echo "Invalid URL ...";
                      exit();
@@ -257,7 +259,7 @@ clientCustomerId = "' . $customer_id . '"
             }
 
         }
-        echo "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
+        echo $urlSheet;
     }
 
     //**************LINKEDIN***********
