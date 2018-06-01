@@ -17,8 +17,11 @@
 </head>
 <body>
 <div id="app">
+    <span class="center">
+        This web application is designed to collect statistics from Google Advords for an arbitrary date range. Select which report to enter data and date range, then click Processing.
+    </span>
     <nav class="navbar navbar-default navbar-static-top">
-        <div class="container">
+        <div class="container center">
             <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247">
                 Main Report
             </a>
@@ -26,9 +29,10 @@
                 Clone Report
             </a>
             <div id="form-data">
-            <form action="" method="POST">
+            <form id="Adword-params" action="" method="POST">
                 {{ csrf_field() }}
                 <div class="navbar-brand">
+                    Type Report:
                     <select size="1" name="type-report">
                         <option value="0">Main</option>
                         <option value="1">Clone</option>
@@ -38,12 +42,23 @@
                 <div class="navbar-brand">To: <input type="date" name="date-to"></div>
                 <div class="navbar-brand"><button type="submit" name="action" value="save">Processing</button></div>
             </form>
-
             <div >
         </div>
     </nav>
-    <div>
-        {{ $message }}
+    <div class="content-message center">
+        {!! $message  !!}
+    </div>
+    <div class="overlay-loader" style="display: none">
+        Please wait...
+        <div class="loader">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
     </div>
 
     @yield('content')
@@ -51,6 +66,7 @@
 
 <!-- Scripts -->
 <script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ asset('js/custom.js') }}"></script>
 @stack('scripts')
 
 </body>
