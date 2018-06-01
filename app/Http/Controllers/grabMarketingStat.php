@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\GoogleSheet;
+use Composer\IO\NullIO;
 use Google;
 use Google\AdsApi\AdWords\AdWordsServices;
 use Google\AdsApi\AdWords\AdWordsSession;
@@ -33,6 +34,7 @@ use Carbon\Carbon;
 use App\Api\GoogleClient;
 use Sheets;
 use \App\GoogleSheet as Sheet;
+use Illuminate\Http\Request;
 
 
 
@@ -42,8 +44,30 @@ class grabMarketingStat extends Controller
     const PAGE_LIMIT = 500;
     public $input=[];
     public $inputArbitary=[];
+    public $message='';
 
+    public function get(Request $request){
+        $data = array();
+        $bufer   = explode('&', $request->getContent());
+        $fields_form = ['type-report',
+                        'date-from',
+                        'date-to',
+        ];
 
+        foreach ($bufer as $fb){
+            foreach ($fields_form as $ff){
+                if(stripos($fb, $ff) !== false)
+                    $data[$ff] = str_replace($ff.'=', '', $fb);
+            }
+        }
+        self::grab('main', $data['type-report'], $data['date-from'],$data['date-from']);
+        return view('ppc.index', ["message" => $this->message]);
+    }
+    
+    public function index(Request $request)
+    {
+        return view('ppc.index', ["message" => $this->message]);
+    }
     public static function getReport(AdWordsSession $session, $reportQuery, $reportFormat) {
 
         // Download report as a string.
@@ -81,15 +105,16 @@ clientCustomerId = "' . $customer_id . '"
 
         // Create report query
         $buildReportQuery = 'SELECT CampaignId, '
-            . 'Clicks, Impressions, Cost FROM CRITERIA_PERFORMANCE_REPORT '
+            . 'Clicks, Impressions, Cost, AllConversionValue FROM CRITERIA_PERFORMANCE_REPORT '
             . 'WHERE CampaignId IN [%s] DURING %s';
         $buildReportQuery=sprintf($buildReportQuery,$compaign_id,$during);
 
         $stringReport=self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport=explode(',',$stringReport);
-        $Click=$arrayReport[count($arrayReport)-3];
-        $Impressions=$arrayReport[count($arrayReport)-2];
-        $Cost=$arrayReport[count($arrayReport)-1];
+        $Click=$arrayReport[count($arrayReport)-4];
+        $Impressions=$arrayReport[count($arrayReport)-3];
+        $Cost=$arrayReport[count($arrayReport)-2];
+        $Conversion=$arrayReport[count($arrayReport)-1];
 
         //Cut of zeros
         if($Cost!=0){
@@ -99,21 +124,19 @@ clientCustomerId = "' . $customer_id . '"
         //Switch input result to current or arbitary month
 
         if($arbitary!=0) {
-            array_push($this->inputArbitary, array($Click, $Impressions, $Cost));
+            array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
         }
         else {
-            array_push($this->input, array($Click, $Impressions, $Cost));
+            array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
         }
 
-        echo " successful! <br>";
+        $this->message .= " successful! <br>";
 
     }
 
-    public function grab($params)
+    public function grab($params, $report=Null, $date_from=Null, $date_to=Null)
     {
         ini_set("max_execution_time", 0);
-//        var_dump(ini_get("max_execution_time"));
-//        die('Error');
         $default = [
             'APPLICATION_NAME'   => 'Google Sheets API',
             'CREDENTIALS_PATH'   => app_path() . '/ApiSources/google-sheets.json',
@@ -127,40 +150,61 @@ clientCustomerId = "' . $customer_id . '"
         $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
         //get ranges of input
         switch ($params){
-            case 'clone':  $CurrentSheet='New Detail Raw data';
+            case 'clone':
+                $CurrentSheet='New Detail Raw data';
                 $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
                 break;
-            case 'main': $CurrentSheet='Raw data';
+            case 'main':
+                $CurrentSheet='Raw data';
                 $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
                 break;
-            default: echo "Invalid URL ...";
-                     exit();
+            default:
+                $this->message .= "Invalid URL ...";
+                exit();
                 break;
         }
-        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:G4');
+        if( isset($report) && !empty($report)){
+            switch ($report){
+                case '0':
+                    $CurrentSheet='New Detail Raw data';
+                    $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
+                    break;
+                case '1':
+                    $CurrentSheet='Raw data';
+                    $urlSheet="<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
+                    break;
+                default:
+                    $this->message .= "Error ...";
+                    exit();
+                    break;
+            }
+        }
+
+        $ranges=Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:H4');
 
         $rangeInputCurrent = $CurrentSheet.'!'.$ranges[0][1].':'.$ranges[0][2];
         $rangeInputLast = $CurrentSheet.'!'.$ranges[0][3].':'.$ranges[0][4];
         $rangeInputArbitary =$CurrentSheet.'!'.$ranges[0][5].':'.$ranges[0][6];
         $rangeSource =$CurrentSheet.'!'.$ranges[1][1].':'.$ranges[1][2];
-        $rangeNameCurrent=$CurrentSheet.'!'.'C8:E8';
-        $rangeNameLast=$CurrentSheet.'!'.'F8:H8';
+        $rangeNameCurrent=$CurrentSheet.'!'.'C8:F8';
+        $rangeNameLast=$CurrentSheet.'!'.'G8:J8';
         $rangeDateUpdated=$CurrentSheet.'!'.'B5';
+        $rangeArbitaryFrom=$CurrentSheet.'!'.'L8';
+        $rangeArbitaryTo=$CurrentSheet.'!'.'M8';
+        $ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
+
         $duringCurrent=date('Ym').'01, '.date('Ymd'); // This month
-        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-            $duringArbitary = $ranges[1][5] . ', ' . $ranges[1][6]; // Arbitary month
+        if ($ProcessingArbitary) {
+            $duringArbitary = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to); // Arbitary month
         }
 
         $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
-//        echo '<pre>';
-//        var_dump($source);
-//        exit();
-        echo "Processing started!<br>";
+        $this->message .= "Processing started!<br>";
         foreach ($source as $row){
             if(isset($row) && !empty($row)) {
                 if ($row[0]=="adwords") {
                     //get adwords account
-                    echo "Adwords AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
+                    $this->message .= "Adwords AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
                     $customer_id = str_replace('-', '', isset($row[1]) && !empty($row[1]) ? $row[1] : '');
                     if (isset($row[2]) && !empty($row[2])) {
                         $compaign_id = $row[2];
@@ -172,7 +216,7 @@ clientCustomerId = "' . $customer_id . '"
                                 else break;
                             }
                         }
-                        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+                        if ($ProcessingArbitary) {
                             self::getReportAdwords($customer_id, $compaign_id, $duringArbitary, 1);
                         }
                         else {
@@ -180,86 +224,88 @@ clientCustomerId = "' . $customer_id . '"
                         }
                     }
                     else {
-                        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-                            array_push($this->inputArbitary, array(0, 0, 0));
+                        if ($ProcessingArbitary) {
+                            array_push($this->inputArbitary, array(0, 0, 0, 0));
                         }
                         else {
-                            array_push($this->input, array(0, 0, 0));
+                            array_push($this->input, array(0, 0, 0, 0));
                         }
 
-                        echo " empty CompaignID! <br>";
+                        $this->message .= " empty CompaignID! <br>";
                     }
                 }
                 elseif ($row[0]=="bing") {
                     //get bing account
-                    echo "Bing AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
-                    if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-                        array_push($this->inputArbitary, array(0, 0, 0));
+                    $this->message .= "Bing AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
+                    if ($ProcessingArbitary) {
+                        array_push($this->inputArbitary, array(0, 0, 0, 0));
                     }
                     else {
-                        array_push($this->input, array(0, 0, 0));
+                        array_push($this->input, array(0, 0, 0, 0));
                     }
-                    echo " not processed! <br>";
+                    $this->message .= " not processed! <br>";
                 }
                 elseif ($row[0]=="linkedin"){
                     //get linkedin account
-                    echo "Linkedin AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
-                    if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-                        array_push($this->inputArbitary, array(0, 0, 0));
+                    $this->message .= "Linkedin AccountID=".isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID'." - ";
+                    if ($ProcessingArbitary) {
+                        array_push($this->inputArbitary, array(0, 0, 0, 0));
                     }
                     else {
-                        array_push($this->input, array(0, 0, 0));
+                        array_push($this->input, array(0, 0, 0, 0));
                     }
-                    echo " not processed! <br>";
+                    $this->message .= " not processed! <br>";
                 }
             }
             else
                 //get empty row
-                if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
-                    array_push($this->inputArbitary, array(NULL,NULL,NULL));
+                if ($ProcessingArbitary) {
+                    array_push($this->inputArbitary, array(NULL,NULL,NULL,NULL));
                 }
                 else {
-                    array_push($this->input, array(NULL,NULL,NULL));
+                    array_push($this->input, array(NULL,NULL,NULL,NULL));
                 }
         }
-        echo "Processing complete!<br>";
+        $this->message .= "Processing complete!<br>";
 
 
         //Set result to Google Sheets
 
 
-        if (isset($ranges[1][5]) && !empty($ranges[1][5]) && isset($ranges[1][6]) && !empty($ranges[1][6])) {
+        if ($ProcessingArbitary) {
             //The arbitary month
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary)){
-                echo "Error update range to Sheet!";
+                $this->message .= "Error update range to Sheet!";
             }
             else {
-                echo "Statistics for the arbitary month have been updated!<br>";
+                Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryFrom, $date_from);
+                Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryTo, $date_to);
+                $this->message .= "Statistics for the arbitary month have been updated!<br>";
             }
         }
         else {
             //The current month
             If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputCurrent, $this->input)){
-                echo "Error update range to Sheet!";
+                $this->message .= "Error update range to Sheet!";
             }
             else{
-                echo "Statistics for the current month have been updated!<br>";
+                $this->message .= "Statistics for the current month have been updated!<br>";
                 Sheet::setToSheet($service, $spreadsheetId, $rangeDateUpdated, array(array(date('r'))));
                 Sheet::setToSheet($service, $spreadsheetId, $rangeNameCurrent, array(array(date('F'))));
             };
             //The last month
             If (date('t')==date('d')){
                 If (!Sheet::setToSheet($service, $spreadsheetId, $rangeInputLast, $this->input)){
-                    echo "Error update range to Sheet!";
+                    $this->message .= "Error update range to Sheet!";
                 }
                 else{
-                    echo "Statistics for the last month have been updated!<br>";
+                    $this->message .= "Statistics for the last month have been updated!<br>";
                     Sheet::setToSheet($service, $spreadsheetId, $rangeNameLast, array(array(date('F'))));
                 };
             }
 
         }
-        echo $urlSheet;
+        $this->message .= $urlSheet;
     }
 
     //**************LINKEDIN***********
