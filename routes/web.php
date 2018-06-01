@@ -15,7 +15,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/grab_marketing_stat', 'grabMarketingStat@grab');
+Route::get('/grab_marketing_stat/{params}', 'grabMarketingStat@grab');
 Route::get('/grab_marketing_stat_bing', 'grabMarketingStat@grabBing');
 Route::get('/grab_marketing_stat_linkedin', 'grabMarketingStat@grabLinkedin');
 Route::get('/grab_google_analytics_reports', 'GrabDimensionsFromAnalyticsController@grab');
@@ -47,3 +47,6 @@ Route::delete('/ga_reports_clusters/{id}', 'GoogleAnalyticsReportsClustersContro
 
 Route::post('/ga_reports_posts/change_post_cluster/{id}', 'GoogleAnalyticsReportsPostsController@change_post_cluster');
 Route::get('/ga_reports_posts/grab_posts', 'GoogleAnalyticsReportsPostsController@grab_posts');
+
+Route::get('/adwords_arbitary', 'grabMarketingStat@index');
+Route::post('/adwords_arbitary', 'grabMarketingStat@get');

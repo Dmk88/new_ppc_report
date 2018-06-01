@@ -27,5 +27,4 @@ class GoogleSheet extends Model
             return $values;
         }
     }
-
 }
