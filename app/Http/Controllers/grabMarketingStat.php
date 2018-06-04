@@ -26,6 +26,7 @@ use Google\AdsApi\AdWords\ReportSettingsBuilder;
 use Google\AdsApi\AdWords\v201802\cm\Predicate;
 use Google\AdsApi\AdWords\v201802\cm\PredicateOperator;
 use Google\AdsApi\AdWords\v201802\cm\ReportDefinitionReportType;
+use Hamcrest\Core\DescribedAsTest;
 use Happyr\LinkedIn;
 use Google_Service_Sheets;
 use Google_Service_Sheets_ClearValuesRequest;
@@ -63,7 +64,7 @@ class grabMarketingStat extends Controller
                         $data[$ff] = str_replace($ff . '=', '', $fb);
                 }
             }
-            self::grab('main', $data['type-report'], $data['date-from'], $data['date-from']);
+            self::grab('main', $data['type-report'], $data['date-from'], $data['date-to']);
         }
         catch (Exception $e) {
         dd($e);
@@ -146,6 +147,7 @@ clientCustomerId = "' . $customer_id . '"
 
     public function grab($params, $report = Null, $date_from = Null, $date_to = Null)
     {
+        try{
         ini_set("max_execution_time", 0);
         $default = [
             'APPLICATION_NAME' => 'Google Sheets API',
@@ -173,13 +175,13 @@ clientCustomerId = "' . $customer_id . '"
                     exit();
                     break;
             }
-            if (isset($report) && !empty($report)) {
+            if (isset($report)) {
                 switch ($report) {
-                    case '0':
+                    case "1":
                         $CurrentSheet = 'New Detail Raw data';
                         $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
                         break;
-                    case '1':
+                    case "0":
                         $CurrentSheet = 'Raw data';
                         $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
                         break;
@@ -189,7 +191,6 @@ clientCustomerId = "' . $customer_id . '"
                         break;
                 }
             }
-
             $ranges = Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:H4');
 
             $rangeInputCurrent = $CurrentSheet . '!' . $ranges[0][1] . ':' . $ranges[0][2];
@@ -302,6 +303,10 @@ clientCustomerId = "' . $customer_id . '"
 
             }
             $this->message .= $urlSheet;
+    }
+    catch (Exception $e) {
+    dd($e);
+    }
     }
 
     //**************LINKEDIN***********
