@@ -191,7 +191,7 @@ clientCustomerId = "' . $customer_id . '"
                         break;
                 }
             }
-            $ranges = Sheet::getOfSheet($service, $spreadsheetId, 'Raw data!A3:H4');
+            $ranges = Sheet::getOfSheet($service, $spreadsheetId, $CurrentSheet .'!A3:H4');
 
             $rangeInputCurrent = $CurrentSheet . '!' . $ranges[0][1] . ':' . $ranges[0][2];
             $rangeInputLast = $CurrentSheet . '!' . $ranges[0][3] . ':' . $ranges[0][4];
