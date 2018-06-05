@@ -18,7 +18,7 @@
 <body>
 <div id="app">
     <span class="center">
-        This web application is designed to collect statistics from Google Advords for an arbitrary date range. Select which report to enter data and date range, then click Processing.
+        This web application is designed to collect statistics from Google Adwords for an arbitrary date range. Select which report to enter data and date range, then click Processing.
     </span>
     <nav class="navbar navbar-default navbar-static-top">
         <div class="container center">
