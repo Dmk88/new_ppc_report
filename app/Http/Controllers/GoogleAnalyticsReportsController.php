@@ -17,7 +17,7 @@ use Google_Service_AnalyticsReporting_Metric;
 use Google_Service_AnalyticsReporting_ReportRequest;
 use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
-
+use Exception;
 
 class GoogleAnalyticsReportsController extends Controller
 {
@@ -109,11 +109,16 @@ class GoogleAnalyticsReportsController extends Controller
     
     public function index(Request $request)
     {
-        $reports = GAReports::all();
-        
-        return view('ga_reports.index', [
-            'reports' => $reports,
-        ]);
+        try{
+            $reports = GAReports::all();
+
+            return view('ga_reports.index', [
+                'reports' => $reports,
+            ]);
+        }
+        catch (Exception $e) {
+        dd($e);
+        }
     }
     
     public function show_add_form(Request $request)
