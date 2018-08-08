@@ -94,6 +94,14 @@
 <script>
     $(function () {
         $('#app').on('click', '#get_report', function (e) {
+            var dateStart = $('input[name="start_date"]').val(),
+                dateEnd   = $('input[name="end_date"]').val();
+
+            if (new Date(dateStart).getTime() > new Date(dateEnd).getTime()) {
+                alert('Error: Date Range is Invalid.');
+                return;
+            }
+
             $('#loading-indicator').show();
             $.ajaxSetup({
                 headers: {
@@ -102,8 +110,8 @@
             });
             var dataObj = {
                 action: 'get_report',
-                start_date: $('input[name="start_date"]').val(),
-                end_date: $('input[name="end_date"]').val()
+                start_date: dateStart,
+                end_date: dateEnd
             };
             $.ajax({
                 url: '/ga_reports',
@@ -111,8 +119,12 @@
                 contentType: "json",
                 processData: false,
                 data: JSON.stringify(dataObj)
-            }).always(function (data) {
+            }).always(  function (data, status, errorThrown) {
                 $('#loading-indicator').hide();
+                if (status != 'success') {
+                    alert('Error: ' + errorThrown);
+                    return;
+                }
                 var report = JSON.parse(data);
                 if (report.message == 'success') {
                     var cluster_html_1 = '',

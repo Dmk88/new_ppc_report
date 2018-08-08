@@ -416,13 +416,14 @@ class GoogleAnalyticsReportsController extends Controller
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
         $report           = [];
         $this->summary    = $this->null_stat;
-        foreach ($this->sources as $source) {
+        foreach ($this->sources as &$source) {
             $source = $this->null_stat;
         }
         foreach ($this->dimensions as $k => $v) {
+            /** @var GAReportsCluster $cluster */
             foreach ($clusters as $cluster) {
                 $posts = $cluster->posts()->get();
-                if (empty($posts)) {
+                if (empty($posts) || $posts->isEmpty()) {
                     continue;
                 }
                 foreach ($posts as $post) {
@@ -450,8 +451,8 @@ class GoogleAnalyticsReportsController extends Controller
                     'source'  => $this->sources,
                 ]);
                 $this->summary = $this->null_stat;
-                foreach ($this->sources as $key_d => $source) {
-                    $this->sources[$key_d] = $this->null_stat;
+                foreach ($this->sources as &$source) {
+                    $source = $this->null_stat;
                 }
                 $this->post_count = 0;
             }
