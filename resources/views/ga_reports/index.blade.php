@@ -68,7 +68,7 @@
         </div>
     </div>
     <div class="container">
-        <h2>Custom real-time Report (it takes a lot of time)</h2>
+        <h2>Custom real-time Report</h2>
         <div class="panel-body">
             @include('common.errors')
             <div class="form-horizontal">
@@ -77,7 +77,7 @@
         </div>
         <div class="form-inline">
             <div class="input-group" id="datepicker">
-                <span class="input-group-addon">Date Range:</span>
+                <span class="input-group-addon">Date Range (mm/dd/yyyy):</span>
                 {!! Form::input('date', 'start_date', Carbon::now()->format('Y-m-d'), ['class' => 'form-control']) !!}
                 <span class="input-group-addon">to</span>
                 {!! Form::input('date', 'end_date', Carbon::now()->addDays(1)->format('Y-m-d'), ['class' => 'form-control']) !!}
@@ -119,7 +119,7 @@
                 contentType: "json",
                 processData: false,
                 data: JSON.stringify(dataObj)
-            }).always(  function (data, status, errorThrown) {
+            }).always(function (data, status, errorThrown) {
                 $('#loading-indicator').hide();
                 if (status != 'success') {
                     alert('Error: ' + errorThrown);
@@ -127,17 +127,12 @@
                 }
                 var report = JSON.parse(data);
                 if (report.message == 'success') {
-                    var cluster_html_1 = '',
-                            cluster_html_2 = '',
-                            cluster_html_3 = '',
-                            cluster_html_4 = '',
-                            cluster_html_5 = '';
-                    $('#report').html(' <div class="Rtable-cell"> <div ' +
-                            'class="summary-value"><h3><strong>Clusters</strong></h3></div></div><div class="Rtable-cell"><strong>Page Views</strong></div><div class="Rtable-cell"><strong>Unique Page Views</strong></div><div class="Rtable-cell"><strong>Bounce Rate</strong></div><div class="Rtable-cell"><strong>Avg ' +
+                    var cluster_html_1 = '', cluster_html_2 = '', cluster_html_3 = '', cluster_html_4 = '', cluster_html_5 = '';
+                    $('#report').html('<div class="Rtable-cell"><div ' +
+                            'class="summary-value"><h3><strong>Clusters</strong></h3></div></div><div class="Rtable-cell"><strong>Page Views</strong></div><div class="Rtable-cell"><strong>Unique Page Views</strong></div><div class="Rtable-cell"><strong>Bounce Rate (%)</strong></div><div class="Rtable-cell"><strong>Avg ' +
                             'Session Duration</strong></div>');
                     $.each(report.clusters, function (index, cluster) {
-                        cluster_html_1 += '<div class="Rtable-cell"><div class="summary-value"><h3>' + cluster
-                                        .cluster + '</h3></div>';
+                        cluster_html_1 += '<div class="Rtable-cell"><div class="summary-value"><h3>' + cluster.cluster + '</h3></div>';
                         cluster_html_2 += '<div class="Rtable-cell"><div class="summary-value">' + cluster.summary.pageviews + '</div>';
                         cluster_html_3 += '<div class="Rtable-cell"><div class="summary-value">' + cluster.summary.uniquePageviews + '</div>';
                         cluster_html_4 += '<div class="Rtable-cell"><div class="summary-value">' + cluster.summary.bounceRate + '</div>';
@@ -154,17 +149,9 @@
                         cluster_html_3 += '</div>';
                         cluster_html_4 += '</div>';
                         cluster_html_5 += '</div>';
-                        $('#report').append(cluster_html_1 + cluster_html_2 + cluster_html_3 +
-                                cluster_html_4 +
-                                cluster_html_5);
-                        cluster_html_1 = '';
-                        cluster_html_2 = '';
-                        cluster_html_3 = '';
-                        cluster_html_4 = '';
-                        cluster_html_5 = '';
+                        $('#report').append(cluster_html_1 + cluster_html_2 + cluster_html_3 + cluster_html_4 + cluster_html_5);
+                        cluster_html_1 = cluster_html_2 = cluster_html_3 = cluster_html_4 = cluster_html_5 = '';
                     });
-
-                    console.log(report);
                 } else {
                     alert('Error on server side');
                 }

@@ -63,6 +63,7 @@ input.post-cluster {
     position: absolute;
     left: 40%;
     top: 35%;
+    z-index: 1000;
 }
 
 .navbar-brand {
