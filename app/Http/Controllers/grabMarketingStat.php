@@ -37,6 +37,8 @@ use \App\GoogleSheet as Sheet;
 use \App\BingReportRequest as BingReport;
 use Illuminate\Http\Request;
 use Exception;
+use DateTime;
+use ZipArchive;
 
 class grabMarketingStat extends Controller
 {
@@ -336,13 +338,29 @@ clientCustomerId = "' . $customer_id . '"
 
     public function grabBing(Request $request)
     {
-        $fromDate = date("Y-m-d", strtotime("18-08-01"));
-        $toDate   = date("Y-m-d", strtotime("18-08-22"));
-//        dd($fromDate);
-//        exit();
-        echo "<pre>";
+        $fromDate = '2018-08-01';
+        $toDate   = '2018-08-25';
+//        echo "<pre>";
 //        $CustomerID = "858558";
         $CustomerID = "17182159";
+        $DownloadPath = public_path()."/../app/ApiSources/bingReport/".$CustomerID.".zip";
         BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
+        $filePath = $this->extractFile($DownloadPath);
+    }
+
+    public function extractFile($path)
+    {
+        $archive = new ZipArchive();
+
+        if ($archive->open($path) === TRUE) {
+            $archive->extractTo(public_path()."/../app/ApiSources/bingReport//");
+            $return = public_path()."/../app/ApiSources/bingReport/".$archive->statIndex(0)['name'];
+            $archive->close();
+        }
+        else {
+            throw new Exception ("Decompress operation from ZIP file failed.");
+        }
+
+        return $return;
     }
 }

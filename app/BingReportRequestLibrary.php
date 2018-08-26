@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use SoapVar;
 use SoapFault;
 use Exception;
+use DateTime;
 
 // Specify the Microsoft\BingAds\V12\Reporting classes that will be used.
 use Microsoft\BingAds\V12\Reporting\SubmitGenerateReportRequest;
@@ -75,15 +76,19 @@ class BingReportRequestLibrary extends Model
 
         //  You may either use a custom date range or predefined time.
           date_default_timezone_set('UTC');
-        //  $LastYear = date("Y") - 1;
-          $report->Time->CustomDateRangeStart = new Date();
-          $report->Time->CustomDateRangeStart->Month = 8;
-          $report->Time->CustomDateRangeStart->Day = 1;
-          $report->Time->CustomDateRangeStart->Year = 2018;
-          $report->Time->CustomDateRangeEnd = new Date();
-          $report->Time->CustomDateRangeEnd->Month = 8;
-          $report->Time->CustomDateRangeEnd->Day = 21;
-          $report->Time->CustomDateRangeEnd->Year = 2018;
+
+        $dateBegin = new DateTime($fromDate);
+        $dateEnd = new DateTime($toDate);
+
+        $report->Time = new ReportTime();
+        $report->Time->CustomDateRangeStart = new Date();
+        $report->Time->CustomDateRangeStart->Month = $dateBegin->format('n');
+        $report->Time->CustomDateRangeStart->Day = $dateBegin->format('j');
+        $report->Time->CustomDateRangeStart->Year = $dateBegin->format('Y');
+        $report->Time->CustomDateRangeEnd = new Date();
+        $report->Time->CustomDateRangeEnd->Month = $dateEnd->format('n');
+        $report->Time->CustomDateRangeEnd->Day = $dateEnd->format('j');
+        $report->Time->CustomDateRangeEnd->Year = $dateEnd->format('Y');
 
         //  If you specify a filter, results may differ from data you see in the Bing Ads web application
         //  $report->Filter = new KeywordPerformanceReportFilter();
@@ -91,23 +96,16 @@ class BingReportRequestLibrary extends Model
         //      DeviceTypeReportFilter::Computer,
         //      DeviceTypeReportFilter::SmartPhone
         //  );
-
+        
         $report->Columns = array (
             KeywordPerformanceReportColumn::TimePeriod,
             KeywordPerformanceReportColumn::AccountId,
-            KeywordPerformanceReportColumn::AccountNumber,
             KeywordPerformanceReportColumn::CampaignId,
-//            KeywordPerformanceReportColumn::Keyword,
-//            KeywordPerformanceReportColumn::KeywordId,
-//            KeywordPerformanceReportColumn::DeviceType,
-//            KeywordPerformanceReportColumn::BidMatchType,
+            KeywordPerformanceReportColumn::Keyword,
+            KeywordPerformanceReportColumn::KeywordId,
             KeywordPerformanceReportColumn::Clicks,
-            KeywordPerformanceReportColumn::Impressions,
-//            KeywordPerformanceReportColumn::Ctr,
-//            KeywordPerformanceReportColumn::AverageCpc,
             KeywordPerformanceReportColumn::Spend,
             KeywordPerformanceReportColumn::Conversions,
-//            KeywordPerformanceReportColumn::QualityScore
         );
 
         // You may optionally sort by any KeywordPerformanceReportColumn, and optionally
@@ -119,7 +117,7 @@ class BingReportRequestLibrary extends Model
         $keywordPerformanceReportSort->SortOrder = SortOrder::Ascending;
         $report->Sort[] = $keywordPerformanceReportSort;
 
-        $report->MaxRows = 10;
+//        $report->MaxRows = 10;
 
         $encodedReport = new SoapVar($report, SOAP_ENC_OBJECT, 'KeywordPerformanceReportRequest', $GLOBALS['ReportingProxy']->GetNamespace());
 
