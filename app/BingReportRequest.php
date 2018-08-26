@@ -36,7 +36,7 @@ class BingReportRequest extends Model
 // Specify the file to download the report to. Because the file is
 // compressed use the .zip file extension.
 
-        $DownloadPath = public_path()."/report/".$CustomerID.".zip";
+        $DownloadPath = public_path()."/../app/ApiSources/".$CustomerID.".zip";
 
 // Confirm that the download folder exist; otherwise, exit.
 

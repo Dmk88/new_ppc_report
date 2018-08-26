@@ -126,7 +126,7 @@ final class AuthHelper {
         $authentication = (new OAuthWebAuthCodeGrant())
             ->withClientId(self::$ClientId)
             ->withClientSecret(self::$ClientSecret)
-            ->withRedirectUri('https://' . $_SERVER['HTTP_HOST'] . self::$RedirectUri)
+            ->withRedirectUri('http://' . $_SERVER['HTTP_HOST'] . self::$RedirectUri)
             ->withState(rand(0,999999999));
 
         $GLOBALS['AuthorizationData'] = (new AuthorizationData())
@@ -136,7 +136,6 @@ final class AuthHelper {
         try
         {
             $refreshToken = AuthHelper::ReadOAuthRefreshToken();
-//            dd($refreshToken);
 
             if($refreshToken != null)
             {
@@ -160,27 +159,15 @@ final class AuthHelper {
 
     static function RequestUserConsent(Request $request)
     {
-//        dd($GLOBALS['AuthorizationData']);
         print "You need to provide consent for the application to access your Bing Ads accounts. " .
             "Copy and paste this authorization endpoint into a web browser and sign in with a Microsoft account " .
             "with access to a Bing Ads account: \n\n" . $GLOBALS['AuthorizationData']->Authentication->GetAuthorizationEndpoint() .
             "\n\nAfter you have granted consent in the web browser for the application to access your Bing Ads accounts, " .
             "please enter the response URI that includes the authorization 'code' parameter: \n\n";
 
-//        dd($request);
         if($request->has('code')) {
-            // Verify whether the 'state' value is the same random value we created
-            // when the authorization request was initiated.
-//            if ($request->get('state') != $request->session()->get('state')) {
-//                throw new Exception(sprintf(
-//                    "The OAuth response state (%s) does not match the client request state (%s)",
-//                    $request->get('state'),
-//                    $request->session()->get('state')));
-//            }
 
             $GLOBALS['AuthorizationData']->Authentication->RequestOAuthTokensByResponseUri($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-            echo "DD:";
-            dd($GLOBALS['AuthorizationData']);
             AuthHelper::WriteOAuthRefreshToken($GLOBALS['AuthorizationData']->Authentication->OAuthTokens->RefreshToken);
 
         }

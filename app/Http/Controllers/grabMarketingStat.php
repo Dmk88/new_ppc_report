@@ -341,7 +341,7 @@ clientCustomerId = "' . $customer_id . '"
 //        dd($fromDate);
 //        exit();
         echo "<pre>";
-        $CustomerID = "858558";
+//        $CustomerID = "858558";
         $CustomerID = "17182159";
         BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
     }
