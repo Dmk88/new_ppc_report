@@ -16,7 +16,7 @@
         "happyr/linkedin-api-client": "*",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
-        "microsoft/bingads": "v0.11.5.5",
+        "microsoft/bingads": "v0.11.12.5",
         "nesbot/carbon": "^1.22",
         "php-http/curl-client": "*",
         "php-http/message": "*",

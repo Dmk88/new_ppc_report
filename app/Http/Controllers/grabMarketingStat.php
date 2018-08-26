@@ -33,12 +33,10 @@ use Google_Service_Sheets_ClearValuesRequest;
 use Google_Service_Sheets_ValueRange;
 use Carbon\Carbon;
 use App\Api\GoogleClient;
-use Sheets;
 use \App\GoogleSheet as Sheet;
+use \App\BingReportRequest as BingReport;
 use Illuminate\Http\Request;
 use Exception;
-
-
 
 class grabMarketingStat extends Controller
 {
@@ -65,10 +63,9 @@ class grabMarketingStat extends Controller
                 }
             }
             self::grab('main', $data['type-report'], $data['date-from'], $data['date-to']);
-        }
-        catch (Exception $e) {
-        dd($e);
-        return false;
+        } catch (Exception $e) {
+            dd($e);
+            return false;
         }
         return view('ppc.index', ["message" => $this->message]);
     }
@@ -147,16 +144,16 @@ clientCustomerId = "' . $customer_id . '"
 
     public function grab($params, $report = Null, $date_from = Null, $date_to = Null)
     {
-        try{
-        ini_set("max_execution_time", 0);
-        $default = [
-            'APPLICATION_NAME' => 'Google Sheets API',
-            'CREDENTIALS_PATH' => app_path() . '/ApiSources/google-sheets.json',
-            'CLIENT_SECRET_PATH' => app_path() . '/ApiSources/client_secret_sheets.json',
-            'SCOPES' => array(
-                Google_Service_Sheets::SPREADSHEETS_READONLY,
-            ),
-        ];
+        try {
+            ini_set("max_execution_time", 0);
+            $default = [
+                'APPLICATION_NAME' => 'Google Sheets API',
+                'CREDENTIALS_PATH' => app_path() . '/ApiSources/google-sheets.json',
+                'CLIENT_SECRET_PATH' => app_path() . '/ApiSources/client_secret_sheets.json',
+                'SCOPES' => array(
+                    Google_Service_Sheets::SPREADSHEETS_READONLY,
+                ),
+            ];
             $client = GoogleClient::get_instance($default);
             $service = new Google_Service_Sheets($client->client);
             $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
@@ -191,7 +188,7 @@ clientCustomerId = "' . $customer_id . '"
                         break;
                 }
             }
-            $ranges = Sheet::getOfSheet($service, $spreadsheetId, $CurrentSheet .'!A3:H4');
+            $ranges = Sheet::getOfSheet($service, $spreadsheetId, $CurrentSheet . '!A3:H4');
 
             $rangeInputCurrent = $CurrentSheet . '!' . $ranges[0][1] . ':' . $ranges[0][2];
             $rangeInputLast = $CurrentSheet . '!' . $ranges[0][3] . ':' . $ranges[0][4];
@@ -303,10 +300,9 @@ clientCustomerId = "' . $customer_id . '"
 
             }
             $this->message .= $urlSheet;
-    }
-    catch (Exception $e) {
-    dd($e);
-    }
+        } catch (Exception $e) {
+            dd($e);
+        }
     }
 
     //**************LINKEDIN***********
@@ -319,7 +315,7 @@ clientCustomerId = "' . $customer_id . '"
         if ($linkedIn->isAuthenticated()) {
             //we know that the user is authenticated now. Start query the API
             $user = $linkedIn->get('v1/people/~:(firstName,lastName)');
-            $compaign=$linkedIn->get('v2/adCampaignsV2/{500610594}');
+            $compaign = $linkedIn->get('v2/adCampaignsV2/{500610594}');
             echo "Welcome " . $user['firstName'];
             echo "<pre>";
             var_dump($compaign);
@@ -338,10 +334,15 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grabBing()
+    public function grabBing(Request $request)
     {
-
-
+        $fromDate = date("Y-m-d", strtotime("18-08-01"));
+        $toDate   = date("Y-m-d", strtotime("18-08-22"));
+//        dd($fromDate);
+//        exit();
+        echo "<pre>";
+        $CustomerID = "858558";
+        $CustomerID = "17182159";
+        BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
     }
-
 }
