@@ -52,3 +52,4 @@ Route::get('/adwords_arbitary', 'grabMarketingStat@index');
 Route::post('/adwords_arbitary', 'grabMarketingStat@get');
 
 Route::get('/bing', 'grabMarketingStat@grabBing');
+Route::get('/title_checker', 'TitleCheckerController@index');
