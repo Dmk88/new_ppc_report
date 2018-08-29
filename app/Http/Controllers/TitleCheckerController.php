@@ -68,7 +68,7 @@ class TitleCheckerController extends Controller
         if (!$error) {
             foreach ($urlsToCheck as $url => $title) {
                 $fetchedTitle = $this->getTitle($url);
-                if ($fetchedTitle == $title) {
+                if ($fetchedTitle != $title) {
                     $urlsWithErrors[$url] = [$fetchedTitle, $title];
                 }
             }
