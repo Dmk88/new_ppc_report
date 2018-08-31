@@ -61,7 +61,7 @@ class BingReportRequestLibrary extends Model
     {
         $report = new KeywordPerformanceReportRequest();
 
-        $report->Format = ReportFormat::Tsv;
+        $report->Format = ReportFormat::Csv;
         $report->ReportName = 'My Keyword Performance Report';
         $report->ReturnOnlyCompleteData = false;
         $report->Aggregation = ReportAggregation::Weekly;
@@ -106,6 +106,7 @@ class BingReportRequestLibrary extends Model
             KeywordPerformanceReportColumn::Clicks,
             KeywordPerformanceReportColumn::Spend,
             KeywordPerformanceReportColumn::Conversions,
+            KeywordPerformanceReportColumn::Impressions,
         );
 
         // You may optionally sort by any KeywordPerformanceReportColumn, and optionally

@@ -2,43 +2,40 @@
 
 namespace App\Http\Controllers;
 
-use App\GoogleSheet;
-use Composer\IO\NullIO;
+use App\Api\GoogleClient;
+use App\BingReportRequest as BingReport;
+use App\GoogleSheet as Sheet;
+use Carbon\Carbon;
+use Exception;
 use Google;
 use Google\AdsApi\AdWords\AdWordsServices;
 use Google\AdsApi\AdWords\AdWordsSession;
 use Google\AdsApi\AdWords\AdWordsSessionBuilder;
-use Google\AdsApi\AdWords\v201802\cm\CampaignService;
-use Google\AdsApi\AdWords\v201802\cm\OrderBy;
-use Google\AdsApi\AdWords\v201802\cm\Paging;
-use Google\AdsApi\AdWords\v201802\cm\Selector;
-use Google\AdsApi\AdWords\v201802\cm\SortOrder;
-use Google\AdsApi\Common\OAuth2TokenBuilder;
-use Google_Client;
-use Google_Service_Drive;
-use Google\AdsApi\Common\ConfigurationLoader;
-
 use Google\AdsApi\AdWords\Reporting\v201802\DownloadFormat;
 use Google\AdsApi\AdWords\Reporting\v201802\ReportDefinition;
 use Google\AdsApi\AdWords\Reporting\v201802\ReportDefinitionDateRangeType;
 use Google\AdsApi\AdWords\Reporting\v201802\ReportDownloader;
 use Google\AdsApi\AdWords\ReportSettingsBuilder;
+use Google\AdsApi\AdWords\v201802\cm\CampaignService;
+use Google\AdsApi\AdWords\v201802\cm\OrderBy;
+use Google\AdsApi\AdWords\v201802\cm\Paging;
 use Google\AdsApi\AdWords\v201802\cm\Predicate;
 use Google\AdsApi\AdWords\v201802\cm\PredicateOperator;
 use Google\AdsApi\AdWords\v201802\cm\ReportDefinitionReportType;
-use Hamcrest\Core\DescribedAsTest;
-use Happyr\LinkedIn;
+use Google\AdsApi\AdWords\v201802\cm\Selector;
+use Google\AdsApi\AdWords\v201802\cm\SortOrder;
+use Google\AdsApi\Common\ConfigurationLoader;
+use Google\AdsApi\Common\OAuth2TokenBuilder;
+use Google_Client;
+use Google_Service_Drive;
 use Google_Service_Sheets;
 use Google_Service_Sheets_ClearValuesRequest;
 use Google_Service_Sheets_ValueRange;
-use Carbon\Carbon;
-use App\Api\GoogleClient;
-use \App\GoogleSheet as Sheet;
-use \App\BingReportRequest as BingReport;
+use Hamcrest\Core\DescribedAsTest;
+use Happyr\LinkedIn;
 use Illuminate\Http\Request;
-use Exception;
-use DateTime;
 use ZipArchive;
+
 
 class grabMarketingStat extends Controller
 {
@@ -64,7 +61,7 @@ class grabMarketingStat extends Controller
                         $data[$ff] = str_replace($ff . '=', '', $fb);
                 }
             }
-            self::grab('main', $data['type-report'], $data['date-from'], $data['date-to']);
+            self::grab('main', $data['type-report'], $data['date-from'], $data['date-to'], $request);
         } catch (Exception $e) {
             dd($e);
             return false;
@@ -144,7 +141,7 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grab($params, $report = Null, $date_from = Null, $date_to = Null)
+    public function grab($params, $report = Null, $date_from = Null, $date_to = Null, Request $request)
     {
         try {
             ini_set("max_execution_time", 0);
@@ -208,6 +205,8 @@ clientCustomerId = "' . $customer_id . '"
                 $duringArbitary = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to); // Arbitary month
             }
 
+            array_map('unlink', glob(public_path()."/../app/ApiSources/bingReport/*.zip"));
+
             $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
             $this->message .= "Processing started!<br>";
             foreach ($source as $row) {
@@ -242,12 +241,33 @@ clientCustomerId = "' . $customer_id . '"
                     } elseif ($row[0] == "bing") {
                         //get bing account
                         $this->message .= "Bing AccountID=" . isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID' . " - ";
-                        if ($ProcessingArbitary) {
-                            array_push($this->inputArbitary, array(0, 0, 0, 0));
+                        $customer_id = isset($row[1]) && !empty($row[1]) ? $row[1] : '';
+
+                        if (isset($row[2]) && !empty($row[2])) {
+                            $compaign_id = $row[2];
+                            if (count($row) > 2) {
+                                for ($i = 3; $i <= count($row); $i++) {
+                                    if (isset($row[$i]) && !empty($row[$i])) {
+                                        $compaign_id = $row[2];
+                                    } else break;
+                                }
+                            }
+                            if ($ProcessingArbitary) {
+                              self::grabBing($customer_id, $compaign_id, 1, $date_from, $date_to, $request);
+                            } else {
+                                $date_from_this_month = date('Y-m-01');
+                                $date_to_this_month = date('Y-m-d');
+                                self::grabBing($customer_id, $compaign_id, 0, $date_from_this_month, $date_to_this_month, $request);
+                            }
                         } else {
-                            array_push($this->input, array(0, 0, 0, 0));
+                            if ($ProcessingArbitary) {
+                                array_push($this->inputArbitary, array(0, 0, 0, 0));
+                            } else {
+                                array_push($this->input, array(0, 0, 0, 0));
+                            }
+
+                            $this->message .= " empty CompaignID! <br>";
                         }
-                        $this->message .= " not processed! <br>";
                     } elseif ($row[0] == "linkedin") {
                         //get linkedin account
                         $this->message .= "Linkedin AccountID=" . isset($row[1]) && !empty($row[1]) ? $row[1] : 'Empty AccountID' . " - ";
@@ -266,6 +286,8 @@ clientCustomerId = "' . $customer_id . '"
                         array_push($this->input, array(NULL, NULL, NULL, NULL));
                     }
             }
+
+
             $this->message .= "Processing complete!<br>";
 
 
@@ -336,31 +358,137 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grabBing(Request $request)
+    public function grabBing($customer_id, $compaign_id, $arbitary, $date_from, $date_to, $request)
     {
-        $fromDate = '2018-08-01';
-        $toDate   = '2018-08-25';
-//        echo "<pre>";
-//        $CustomerID = "858558";
-        $CustomerID = "17182159";
-        $DownloadPath = public_path()."/../app/ApiSources/bingReport/".$CustomerID.".zip";
-        BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
-        $filePath = $this->extractFile($DownloadPath);
+
+        $DownloadPath = public_path() . "/../app/ApiSources/bingReport/" . $customer_id . ".zip";
+        if (!file_exists($DownloadPath)) {
+            BingReport::getReport($request, $date_from, $date_to, $customer_id);
+        }
+        if (file_exists($DownloadPath)) {
+            $filePath = $this->extractFile($DownloadPath);
+
+        $data = $this->processingFile($filePath, $compaign_id);
+
+        if ($data !== 0) {
+
+            $Click = $data['clicks'];
+            $Impressions = $data['impressions'];
+            $Cost = $data['cost'];
+            $Conversion = $data['conversions'];
+
+            if ($arbitary != 0) {
+                array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
+            } else {
+                array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
+            }
+            if ($this->processingFile($filePath, $compaign_id)) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
+            }
+            $this->message .= " successful! <br>";
+        } else {
+            if ($arbitary != 0) {
+                array_push($this->inputArbitary, array(0, 0, 0, 0));
+            } else {
+                array_push($this->input, array(0, 0, 0, 0));
+            }
+            if ($this->processingFile($filePath, $compaign_id)) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
+            }
+            $this->message .= " invalid campaign_id! <br>";
+        }
+        }
     }
+
+//    public function grabBing(Request $request)
+//    {
+//        $fromDate = '2018-07-01';
+//        $toDate   = '2018-07-31';
+////        echo "<pre>";
+////        $CustomerID = "858558";
+//        $CustomerID = "17182159";
+//        $DownloadPath = public_path()."/../app/ApiSources/bingReport/".$CustomerID.".zip";
+//       // BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
+//        $filePath = $this->extractFile($DownloadPath);
+//
+//        //var_dump($this->processingFile($filePath, '328463719'));
+//
+//        $data = $this->processingFile($filePath, '326440598');
+//        //var_dump($data);
+//
+//        $Click = $data['clicks'];
+//        $Impressions = $data['impressions'];
+//        $Cost = $data['cost'];
+//        $Conversion = $data['conversions'];
+//
+//
+//        array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
+//         var_dump($this->inputArbitary);
+//    }
 
     public function extractFile($path)
     {
         $archive = new ZipArchive();
 
         if ($archive->open($path) === TRUE) {
-            $archive->extractTo(public_path()."/../app/ApiSources/bingReport//");
-            $return = public_path()."/../app/ApiSources/bingReport/".$archive->statIndex(0)['name'];
+            $archive->extractTo(public_path() . "/../app/ApiSources/bingReport//");
+            $return = public_path() . "/../app/ApiSources/bingReport/" . $archive->statIndex(0)['name'];
             $archive->close();
-        }
-        else {
+        } else {
             throw new Exception ("Decompress operation from ZIP file failed.");
         }
 
         return $return;
+    }
+
+    public function processingFile($path, $compaign_id)
+    {
+        if (is_file($path)) {
+            $reader = @fopen($path, "r");
+            while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
+                if ($row[0] == 'TimePeriod' &&
+                    $row[2] == 'CampaignId' &&
+                    $row[5] == 'Clicks' &&
+                    $row[6] == 'Spend' &&
+                    $row[7] == 'Conversions' &&
+                    $row[8] == 'Impressions') {
+                    break;
+                }
+            }
+            $data = array();
+            while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
+                if (isset($row[0]) &&
+                    isset($row[2]) &&
+                    isset($row[5]) &&
+                    isset($row[6]) &&
+                    isset($row[7]) &&
+                    isset($row[8])
+                ) {
+
+                    if (!isset($data[$row[2]])) {
+                        $data[$row[2]]['clicks'] = 0;
+                        $data[$row[2]]['cost'] = 0;
+                        $data[$row[2]]['conversions'] = 0;
+                        $data[$row[2]]['impressions'] = 0;
+                    }
+                    $data[$row[2]]['clicks'] += $row[5];
+                    $data[$row[2]]['cost'] += $row[6];
+                    $data[$row[2]]['conversions'] += $row[7];
+                    $data[$row[2]]['impressions'] += $row[8];
+
+                }
+            }
+
+        }
+        //var_dump($data[$campaignId]);
+
+        if (array_key_exists($compaign_id, $data)) {
+            return $data[$compaign_id];
+        } else {
+
+            return $data = 0;
+        }
+
+
     }
 }
