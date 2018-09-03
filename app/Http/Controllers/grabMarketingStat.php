@@ -205,8 +205,9 @@ clientCustomerId = "' . $customer_id . '"
                 $duringArbitary = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to); // Arbitary month
             }
 
-            array_map('unlink', glob(public_path()."/../app/ApiSources/bingReport/*.zip"));
-
+            if (glob(public_path() . "/../app/ApiSources/bingReport/*.zip")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.zip"));
+            }
             $source = Sheet::getOfSheet($service, $spreadsheetId, $rangeSource);
             $this->message .= "Processing started!<br>";
             foreach ($source as $row) {

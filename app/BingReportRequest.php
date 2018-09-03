@@ -69,7 +69,7 @@ class BingReportRequest extends Model
 
             $reportRequestId = ReportRequestLibrary::SubmitGenerateReport($report)->ReportRequestId;
 
-            printf("Report Request ID: %s\n\n", $reportRequestId);
+            //printf("Report Request ID: %s\n\n", $reportRequestId);
 
             $waitTime = 30 * 1;
             $reportRequestStatus = null;
@@ -107,9 +107,9 @@ class BingReportRequest extends Model
                     }
                     else
                     {
-                        printf("Downloading from %s.\n\n", $reportDownloadUrl);
+                        //printf("Downloading from %s.\n\n", $reportDownloadUrl);
                         self::DownloadFile($reportDownloadUrl, $DownloadPath);
-                        printf("The report was written to %s.\n", $DownloadPath);
+                        //printf("The report was written to %s.\n", $DownloadPath);
                     }
 
                 }
