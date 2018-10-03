@@ -159,8 +159,8 @@ clientCustomerId = "' . $customer_id . '"
             //get ranges of input
             switch ($params) {
                 case 'clone':
-                    $CurrentSheet = 'New Detail Raw data';
-                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
+                    $CurrentSheet = 'Raw Data - All Details';
+                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
                     break;
                 case 'main':
                     $CurrentSheet = 'Raw data';
@@ -174,8 +174,8 @@ clientCustomerId = "' . $customer_id . '"
             if (isset($report)) {
                 switch ($report) {
                     case "1":
-                        $CurrentSheet = 'New Detail Raw data';
-                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017'>View result</a><br>";
+                        $CurrentSheet = 'Raw Data - All Details';
+                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
                         break;
                     case "0":
                         $CurrentSheet = 'Raw data';
@@ -187,17 +187,17 @@ clientCustomerId = "' . $customer_id . '"
                         break;
                 }
             }
-            $ranges = Sheet::getOfSheet($service, $spreadsheetId, $CurrentSheet . '!A3:H4');
+            $ranges = Sheet::getOfSheet($service, $spreadsheetId, $CurrentSheet . '!F3:M4');
 
             $rangeInputCurrent = $CurrentSheet . '!' . $ranges[0][1] . ':' . $ranges[0][2];
             $rangeInputLast = $CurrentSheet . '!' . $ranges[0][3] . ':' . $ranges[0][4];
             $rangeInputArbitary = $CurrentSheet . '!' . $ranges[0][5] . ':' . $ranges[0][6];
             $rangeSource = $CurrentSheet . '!' . $ranges[1][1] . ':' . $ranges[1][2];
-            $rangeNameCurrent = $CurrentSheet . '!' . 'C8:F8';
-            $rangeNameLast = $CurrentSheet . '!' . 'G8:J8';
-            $rangeDateUpdated = $CurrentSheet . '!' . 'B5';
-            $rangeArbitaryFrom = $CurrentSheet . '!' . 'L8';
-            $rangeArbitaryTo = $CurrentSheet . '!' . 'M8';
+            $rangeNameCurrent = $CurrentSheet . '!' . 'H8:K8';
+            $rangeNameLast = $CurrentSheet . '!' . 'L8:O8';
+            $rangeDateUpdated = $CurrentSheet . '!' . 'G5';
+            $rangeArbitaryFrom = $CurrentSheet . '!' . 'Q8';
+            $rangeArbitaryTo = $CurrentSheet . '!' . 'R8';
             $ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
 
             $duringCurrent = date('Ym') . '01, ' . date('Ymd'); // This month
