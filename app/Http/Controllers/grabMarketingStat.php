@@ -278,6 +278,13 @@ clientCustomerId = "' . $customer_id . '"
                             array_push($this->input, array(0, 0, 0, 0));
                         }
                         $this->message .= " not processed! <br>";
+                    } elseif ($row[0] == NULL) {
+                        //get empty row
+                        if ($ProcessingArbitary) {
+                            array_push($this->inputArbitary, array(NULL, NULL, NULL, NULL));
+                        } else {
+                            array_push($this->input, array(NULL, NULL, NULL, NULL));
+                        }
                     }
                 } else
                     //get empty row
