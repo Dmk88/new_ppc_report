@@ -184,11 +184,9 @@ class grabMarketingStat extends Controller
 
         if($events !== null){
             array_push($this->inputArbitaryEvents, array($events));
-            $this->message .= " successful! <br>";
         }
         else{
             array_push($this->inputArbitaryEvents, array(null));
-            $this->message .= "not result! <br>";
         }
 
     }
@@ -210,11 +208,9 @@ class grabMarketingStat extends Controller
 
         if($events !== null){
             array_push($this->inputArbitaryEvents, array($events));
-            $this->message .= " successful! <br>";
         }
         else{
             array_push($this->inputArbitaryEvents, array(null));
-            $this->message .= "not result! <br>";
         }
     }
 
@@ -256,11 +252,9 @@ class grabMarketingStat extends Controller
 
         if($users != null){
             array_push($this->inputArbitaryUsers, array($users));
-            $this->message .= " successful! <br>";
         }
         else{
             array_push($this->inputArbitaryUsers, array(null));
-            $this->message .= "not result! <br>";
         }
 
     }
@@ -283,11 +277,9 @@ class grabMarketingStat extends Controller
 
         if($users != null){
             array_push($this->inputArbitaryUsers, array($users));
-            $this->message .= " successful! <br>";
         }
         else{
             array_push($this->inputArbitaryUsers, array(null));
-            $this->message .= "not result! <br>";
         }
     }
 
@@ -338,10 +330,10 @@ clientCustomerId = "' . $customer_id . '"
         $stringReport = self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport = explode(',', $stringReport);
 
-        file_put_contents(public_path() . "/../app/ApiSources/adwords/".$customer_id.".csv", $stringReport);
+        file_put_contents(public_path() . "/../app/ApiSources/adwords/" . $customer_id . ".csv", $stringReport);
 
-        $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/adwords/".$customer_id.".csv"));
-       // var_dump($values);
+        $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/adwords/" . $customer_id . ".csv"));
+        // var_dump($values);
         $Click = 0;
         $Impressions = 0;
         $Cost = 0;
@@ -349,16 +341,16 @@ clientCustomerId = "' . $customer_id . '"
 
         $compaign_id = explode(',', $compaign_id);
         foreach ($compaign_id as $comp) {
-                foreach ($values as $val) {
+            foreach ($values as $val) {
 
-                    if ($val[0] == $comp) {
-                        $Click += $val[1];
-                        $Impressions += $val[2];
-                        $Cost += $val[3];
-                        $Conversion += $val[4];
-                    }
+                if ($val[0] == $comp) {
+                    $Click += $val[1];
+                    $Impressions += $val[2];
+                    $Cost += $val[3];
+                    $Conversion += $val[4];
                 }
             }
+        }
 
 
         //Cut of zeros
@@ -656,12 +648,12 @@ clientCustomerId = "' . $customer_id . '"
                 if(!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitaryEvents, $this->inputArbitaryEvents)){
                     $this->message .= "Error update range to Sheet!";
                 } else {
-                    $this->message .= "Statistics for the arbitary month have been updated!<br>";
+                    $this->message .= "Statistics of Events for the arbitary month have been updated!<br>";
                 }
                 if(!Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitaryUsers, $this->inputArbitaryUsers)){
                     $this->message .= "Error update range to Sheet!";
                 } else {
-                    $this->message .= "Statistics for the arbitary month have been updated!<br>";
+                    $this->message .= "Statistics of Users for the arbitary month have been updated!<br>";
                 }
 
             } else {
