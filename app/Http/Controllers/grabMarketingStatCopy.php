@@ -27,7 +27,7 @@ use Google_Service_Sheets;
 use Illuminate\Http\Request;
 use ZipArchive;
 
-class grabMarketingStat extends Controller
+class grabMarketingStatCopy extends Controller
 {
 
     const PAGE_LIMIT = 500;
@@ -58,12 +58,12 @@ class grabMarketingStat extends Controller
             dd($e);
             return false;
         }
-        return view('ppc.index', ["message" => $this->message]);
+        return view('ppc_copy.index', ["message" => $this->message]);
     }
 
     public function index(Request $request)
     {
-        return view('ppc.index', ["message" => $this->message]);
+        return view('ppc_copy.index', ["message" => $this->message]);
     }
 
     public static function getReportAnalyticsEvents(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to)
@@ -370,7 +370,7 @@ clientCustomerId = "' . $customer_id . '"
         file_put_contents(public_path() . "/../app/ApiSources/adwords/".$customer_id.".csv", $stringReport);
 
         $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/adwords/".$customer_id.".csv"));
-       // var_dump($values);
+        // var_dump($values);
         $Click = 0;
         $Impressions = 0;
         $Cost = 0;
@@ -498,16 +498,19 @@ clientCustomerId = "' . $customer_id . '"
 
             $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
 
-            $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
+
+
+
+            $spreadsheetId = '1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw';
             //get ranges of input
             switch ($params) {
                 case 'clone':
                     $CurrentSheet = 'Raw Data - All Details';
-                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
+                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw/edit#gid=1144216345'>View result</a><br>";
                     break;
                 case 'main':
                     $CurrentSheet = 'Raw data';
-                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
+                    $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/19eHon_YQKzsrnr9e0dOZA6Lqu6dHiv3v2ZliBUEIeU0/edit#gid=1311329247'>View result</a><br>";
                     break;
                 default:
                     $this->message .= "Invalid URL ...";
@@ -518,11 +521,11 @@ clientCustomerId = "' . $customer_id . '"
                 switch ($report) {
                     case "1":
                         $CurrentSheet = 'Raw Data - All Details';
-                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
+                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw/edit#gid=1144216345'>View result</a><br>";
                         break;
                     case "0":
                         $CurrentSheet = 'Raw data';
-                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
+                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/19eHon_YQKzsrnr9e0dOZA6Lqu6dHiv3v2ZliBUEIeU0/edit#gid=1311329247'>View result</a><br>";
                         break;
                     default:
                         $this->message .= "Error ...";

@@ -18,24 +18,20 @@
 <body>
 <div id="app">
     <span class="center">
-        This web application is designed to collect statistics from Google Adwords for an arbitrary date range. Select which report to enter data and date range, then click Processing.
+        This web application is designed to collect statistics from Google Adwords, Google Analytics, Bing, Linkedin for an arbitrary date range. Select date range, then click Processing.
     </span>
     <nav class="navbar navbar-default navbar-static-top">
         <div class="container center">
-            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247">
-                Main Report
-            </a>
-            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017">
-                Clone Report
+            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/19eHon_YQKzsrnr9e0dOZA6Lqu6dHiv3v2ZliBUEIeU0/edit#gid=1523362544" target="_blank">
+                Raw Data - All Details Report
             </a>
             <div id="form-data">
             <form id="Adword-params" action="" method="POST">
                 {{ csrf_field() }}
                 <div class="navbar-brand">
-                    Type Report:
+                    Report:
                     <select size="1" name="type-report">
-                        <option value="0">Main</option>
-                        <option value="1">Clone</option>
+                        <option value="1">Raw Data - All Details</option>
                     </select>
                 </div>
                 <div class="navbar-brand">From: <input type="date" name="date-from"></div>

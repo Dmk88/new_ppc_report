@@ -51,5 +51,9 @@ Route::get('/ga_reports_posts/grab_posts', 'GoogleAnalyticsReportsPostsControlle
 Route::get('/adwords_arbitary', 'grabMarketingStat@index');
 Route::post('/adwords_arbitary', 'grabMarketingStat@get');
 
+Route::get('/marketing_stat_arbitary', 'grabMarketingStatCopy@index');
+Route::post('/marketing_stat_arbitary', 'grabMarketingStatCopy@get');
+
 Route::get('/bing', 'grabMarketingStat@grabBing');
+Route::get('/analytics', 'grabMarketingStat@result');
 Route::get('/title_checker', 'TitleCheckerController@index');
