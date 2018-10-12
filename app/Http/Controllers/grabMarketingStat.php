@@ -172,7 +172,7 @@ class grabMarketingStat extends Controller
 
         $events = null;
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
+
             foreach ($compaign_id as $comp) {
                 foreach ($arr as $val) {
 
@@ -182,13 +182,6 @@ class grabMarketingStat extends Controller
                 }
             }
 
-        } else {
-            foreach ($arr as $val) {
-                if ($val[0] == $compaign_id) {
-                    $events = $val[2];
-                }
-            }
-        }
         if($events !== null){
             array_push($this->inputArbitaryEvents, array($events));
             $this->message .= " successful! <br>";
@@ -205,7 +198,7 @@ class grabMarketingStat extends Controller
         $arr = json_decode($json, true);
         $events = null;
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
+
             foreach ($compaign_id as $comp) {
                 foreach ($arr as $val) {
 
@@ -215,13 +208,6 @@ class grabMarketingStat extends Controller
                 }
             }
 
-        } else {
-            foreach ($arr as $val) {
-                if ($val[0] == $compaign_id) {
-                    $events = $val[2];
-                }
-            }
-        }
         if($events !== null){
             array_push($this->inputArbitaryEvents, array($events));
             $this->message .= " successful! <br>";
@@ -259,7 +245,6 @@ class grabMarketingStat extends Controller
         }
         $users = null;
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
             foreach ($compaign_id as $comp) {
                 foreach ($arr as $val) {
 
@@ -269,13 +254,6 @@ class grabMarketingStat extends Controller
                 }
             }
 
-        } else {
-            foreach ($arr as $val) {
-                if ($val[0] == $compaign_id) {
-                    $users = $val[1];
-                }
-            }
-        }
         if($users != null){
             array_push($this->inputArbitaryUsers, array($users));
             $this->message .= " successful! <br>";
@@ -293,7 +271,6 @@ class grabMarketingStat extends Controller
         $users = null;
 
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
             foreach ($compaign_id as $comp) {
                 foreach ($arr as $val) {
 
@@ -303,13 +280,7 @@ class grabMarketingStat extends Controller
                 }
             }
 
-        } else {
-            foreach ($arr as $val) {
-                if ($val[0] == $compaign_id) {
-                    $users = $val[1];
-                }
-            }
-        }
+
         if($users != null){
             array_push($this->inputArbitaryUsers, array($users));
             $this->message .= " successful! <br>";
@@ -377,8 +348,7 @@ clientCustomerId = "' . $customer_id . '"
         $Conversion = 0;
 
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
-            foreach ($compaign_id as $comp) {
+        foreach ($compaign_id as $comp) {
                 foreach ($values as $val) {
 
                     if ($val[0] == $comp) {
@@ -390,17 +360,6 @@ clientCustomerId = "' . $customer_id . '"
                 }
             }
 
-        } else {
-            foreach ($values as $val) {
-
-                if ($val[0] == $compaign_id) {
-                    $Click += $val[1];
-                    $Impressions += $val[2];
-                    $Cost += $val[3];
-                    $Conversion += $val[4];
-                }
-            }
-        }
 
         //Cut of zeros
         if ($Cost != 0) {
@@ -428,7 +387,6 @@ clientCustomerId = "' . $customer_id . '"
         $Conversion = 0;
 
         $compaign_id = explode(',', $compaign_id);
-        if (is_array($compaign_id)) {
             foreach ($compaign_id as $comp) {
                 foreach ($values as $val) {
 
@@ -440,24 +398,6 @@ clientCustomerId = "' . $customer_id . '"
                     }
                 }
             }
-
-        } else {
-            foreach ($values as $val) {
-
-                if ($val[0] == $compaign_id) {
-                    $Click += $val[1];
-                    $Impressions += $val[2];
-                    $Cost += $val[3];
-                    $Conversion += $val[4];
-                }
-            }
-        }
-
-        //var_dump($compaign_id, $Click, $Impressions, $Cost, $Conversion);
-        //$Click = $arrayReport[count($arrayReport) - 4];
-        //$Impressions = $arrayReport[count($arrayReport) - 3];
-        //$Cost = $arrayReport[count($arrayReport) - 2];
-        //$Conversion = $arrayReport[count($arrayReport) - 1];
 
         //Cut of zeros
         if ($Cost != 0) {
@@ -498,14 +438,16 @@ clientCustomerId = "' . $customer_id . '"
 
             $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
 
-            $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
+
             //get ranges of input
             switch ($params) {
                 case 'clone':
+                    $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
                     $CurrentSheet = 'Raw Data - All Details';
                     $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
                     break;
                 case 'main':
+                    $spreadsheetId = '1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw';
                     $CurrentSheet = 'Raw data';
                     $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
                     break;
@@ -517,12 +459,14 @@ clientCustomerId = "' . $customer_id . '"
             if (isset($report)) {
                 switch ($report) {
                     case "1":
+                        $spreadsheetId = '1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I';
                         $CurrentSheet = 'Raw Data - All Details';
                         $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544'>View result</a><br>";
                         break;
                     case "0":
+                        $spreadsheetId = '1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw';
                         $CurrentSheet = 'Raw data';
-                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247'>View result</a><br>";
+                        $urlSheet = "<a href='https://docs.google.com/spreadsheets/d/1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw/edit#gid=1144216345'>View result</a><br>";
                         break;
                     default:
                         $this->message .= "Error ...";
@@ -634,7 +578,7 @@ clientCustomerId = "' . $customer_id . '"
                             if (count($row) > 2) {
                                 for ($i = 3; $i <= count($row); $i++) {
                                     if (isset($row[$i]) && !empty($row[$i])) {
-                                        $compaign_id = $row[2];
+                                        $compaign_id = $compaign_id . ', ' . $row[$i];
                                     } else break;
                                 }
                             }
@@ -785,23 +729,31 @@ clientCustomerId = "' . $customer_id . '"
         if (file_exists($DownloadPath)) {
             $filePath = $this->extractFile($DownloadPath);
 
-            $data = $this->processingFile($filePath, $compaign_id);
+            $Click = 0;
+            $Impressions = 0;
+            $Cost = 0;
+            $Conversion = 0;
 
-            if ($data !== 0) {
+            $compaigns = explode(',', $compaign_id);
+                foreach ($compaigns as $comp) {
+                    $comp = trim($comp);
+                    $data = $this->processingFile($filePath, $comp);
+                    $Click += $data['clicks'];
+                    $Impressions += $data['impressions'];
+                    $Cost += $data['cost'];
+                    $Conversion += $data['conversions'];
+                }
 
-                $Click = $data['clicks'];
-                $Impressions = $data['impressions'];
-                $Cost = $data['cost'];
-                $Conversion = $data['conversions'];
+            $data = $Click+$Impressions+$Cost+$Conversion;
+
+             if ($data !== 0) {
 
                 if ($arbitary != 0) {
                     array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
                 } else {
                     array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
                 }
-                if ($this->processingFile($filePath, $compaign_id)) {
-                    array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
-                }
+                 array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
                 $this->message .= " successful! <br>";
             } else {
                 if ($arbitary != 0) {
@@ -809,39 +761,12 @@ clientCustomerId = "' . $customer_id . '"
                 } else {
                     array_push($this->input, array(0, 0, 0, 0));
                 }
-                if ($this->processingFile($filePath, $compaign_id)) {
-                    array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
-                }
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
+
                 $this->message .= " invalid campaign_id! <br>";
             }
         }
     }
-
-//    public function grabBing(Request $request)
-//    {
-//        $fromDate = '2018-07-01';
-//        $toDate   = '2018-07-31';
-////        echo "<pre>";
-////        $CustomerID = "858558";
-//        $CustomerID = "17182159";
-//        $DownloadPath = public_path()."/../app/ApiSources/bingReport/".$CustomerID.".zip";
-//       // BingReport::getReport($request, $fromDate, $toDate, $CustomerID);
-//        $filePath = $this->extractFile($DownloadPath);
-//
-//        //var_dump($this->processingFile($filePath, '328463719'));
-//
-//        $data = $this->processingFile($filePath, '326440598');
-//        //var_dump($data);
-//
-//        $Click = $data['clicks'];
-//        $Impressions = $data['impressions'];
-//        $Cost = $data['cost'];
-//        $Conversion = $data['conversions'];
-//
-//
-//        array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
-//         var_dump($this->inputArbitary);
-//    }
 
     public function extractFile($path)
     {
@@ -897,12 +822,11 @@ clientCustomerId = "' . $customer_id . '"
             }
 
         }
-        //var_dump($data[$campaignId]);
+
 
         if (array_key_exists($compaign_id, $data)) {
             return $data[$compaign_id];
         } else {
-
             return $data = 0;
         }
 

@@ -18,15 +18,15 @@
 <body>
 <div id="app">
     <span class="center">
-        This web application is designed to collect statistics from Google Adwords for an arbitrary date range. Select which report to enter data and date range, then click Processing.
+        This web application is designed to collect statistics from Google Adwords, Google Analytics, Bing for an arbitrary date range. Select which report to enter data and date range, then click Processing.
     </span>
     <nav class="navbar navbar-default navbar-static-top">
         <div class="container center">
-            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1311329247">
-                Main Report
+            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1D5XkP8t6cmpxdNfa2E_81GVP0es2ouk__7UGvRm_6Iw/edit#gid=1144216345" target="_blank">
+                Raw Data
             </a>
-            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1774056017">
-                Clone Report
+            <a class="navbar-brand" href="https://docs.google.com/spreadsheets/d/1Q4j81zbUXfi2trsiZORF0fGgx_cSFKN5uokJIZOwP0I/edit#gid=1523362544" target="_blank">
+                Raw Data - All Details
             </a>
             <div id="form-data">
             <form id="Adword-params" action="" method="POST">
@@ -34,8 +34,8 @@
                 <div class="navbar-brand">
                     Type Report:
                     <select size="1" name="type-report">
-                        <option value="0">Main</option>
-                        <option value="1">Clone</option>
+                        <option value="0">Raw Data</option>
+                        <option value="1">Raw Data - All Details</option>
                     </select>
                 </div>
                 <div class="navbar-brand">From: <input type="date" name="date-from"></div>

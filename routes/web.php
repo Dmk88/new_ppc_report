@@ -48,11 +48,8 @@ Route::delete('/ga_reports_clusters/{id}', 'GoogleAnalyticsReportsClustersContro
 Route::post('/ga_reports_posts/change_post_cluster/{id}', 'GoogleAnalyticsReportsPostsController@change_post_cluster');
 Route::get('/ga_reports_posts/grab_posts', 'GoogleAnalyticsReportsPostsController@grab_posts');
 
-Route::get('/adwords_arbitary', 'grabMarketingStat@index');
-Route::post('/adwords_arbitary', 'grabMarketingStat@get');
-
-Route::get('/marketing_stat_arbitary', 'grabMarketingStatCopy@index');
-Route::post('/marketing_stat_arbitary', 'grabMarketingStatCopy@get');
+Route::get('/marketing_stat_arbitary', 'grabMarketingStat@index');
+Route::post('/marketing_stat_arbitary', 'grabMarketingStat@get');
 
 Route::get('/bing', 'grabMarketingStat@grabBing');
 Route::get('/analytics', 'grabMarketingStat@result');
