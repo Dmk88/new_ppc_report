@@ -64,7 +64,7 @@ class BingReportRequestLibrary extends Model
         $report->Format = ReportFormat::Csv;
         $report->ReportName = 'My Keyword Performance Report';
         $report->ReturnOnlyCompleteData = false;
-        $report->Aggregation = ReportAggregation::Weekly;
+        $report->Aggregation = ReportAggregation::Daily;
 
         $report->Scope = new AccountThroughAdGroupReportScope();
         $report->Scope->AccountIds = array();
@@ -75,7 +75,7 @@ class BingReportRequestLibrary extends Model
         $report->Time = new ReportTime();
 
         //  You may either use a custom date range or predefined time.
-          date_default_timezone_set('UTC');
+         date_default_timezone_set('UTC');
 
         $dateBegin = new DateTime($fromDate);
         $dateEnd = new DateTime($toDate);
