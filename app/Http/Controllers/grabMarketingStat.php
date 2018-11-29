@@ -361,9 +361,9 @@ clientCustomerId = "' . $customer_id . '"
         //Switch input result to current or arbitary month
 
         if ($arbitary != 0) {
-            array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
+            array_push($this->inputArbitary, array($Impressions, $Click, $Cost, $Conversion));
         } else {
-            array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
+            array_push($this->input, array($Impressions, $Click, $Cost, $Conversion));
         }
 
         $this->message .= " successful! <br>";
@@ -399,9 +399,9 @@ clientCustomerId = "' . $customer_id . '"
         //Switch input result to current or arbitary month
 
         if ($arbitary != 0) {
-            array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
+            array_push($this->inputArbitary, array($Impressions, $Click, $Cost, $Conversion));
         } else {
-            array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
+            array_push($this->input, array($Impressions, $Click, $Cost, $Conversion));
         }
 
         $this->message .= " successful! <br>";
@@ -741,9 +741,9 @@ clientCustomerId = "' . $customer_id . '"
              if ($data !== 0) {
 
                 if ($arbitary != 0) {
-                    array_push($this->inputArbitary, array($Click, $Impressions, $Cost, $Conversion));
+                    array_push($this->inputArbitary, array($Impressions, $Click, $Cost, $Conversion));
                 } else {
-                    array_push($this->input, array($Click, $Impressions, $Cost, $Conversion));
+                    array_push($this->input, array($Impressions, $Click, $Cost, $Conversion));
                 }
                  array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
                 $this->message .= " successful! <br>";
