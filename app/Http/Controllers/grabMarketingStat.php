@@ -66,7 +66,7 @@ class grabMarketingStat extends Controller
         return view('ppc.index', ["message" => $this->message]);
     }
 
-    public static function getReportAnalyticsEvents(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to)
+    public static function getReportAnalyticsEvents(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
     {
         // Replace with your view ID, for example XXXX.
         $VIEW_ID = "169690080";
@@ -85,7 +85,7 @@ class grabMarketingStat extends Controller
 
 
         $dimensions = new Google_Service_AnalyticsReporting_Dimension();
-        $dimensions->setName('ga:adwordsCampaignID');
+        $dimensions->setName($dimension_name);
 
 
         $dimensions2 = new Google_Service_AnalyticsReporting_Dimension();
@@ -116,7 +116,7 @@ class grabMarketingStat extends Controller
     }
 
 
-    public static function getReportAnalyticsUsers(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to)
+    public static function getReportAnalyticsUsers(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
     {
         // Replace with your view ID, for example XXXX.
         $VIEW_ID = "169690080";
@@ -129,8 +129,9 @@ class grabMarketingStat extends Controller
         $metrics = new Google_Service_AnalyticsReporting_Metric();
         $metrics->setExpression("ga:users");
 
+
         $dimensions = new Google_Service_AnalyticsReporting_Dimension();
-        $dimensions->setName('ga:adwordsCampaignID');
+        $dimensions->setName($dimension_name);
 
         // Create the ReportRequest object.
         $request = new Google_Service_AnalyticsReporting_ReportRequest();
@@ -145,7 +146,7 @@ class grabMarketingStat extends Controller
     }
 
 
-    public function getResultsAnalytics($reports, $compaign_id)
+    public function getResultsAnalytics($reports, $compaign_id, $dimension_name)
     {
         $arr = [];
         for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
@@ -167,7 +168,7 @@ class grabMarketingStat extends Controller
             }
 
             $data = json_encode($arr);
-            file_put_contents(public_path() . "/../app/ApiSources/analytics/analytics.json", $data);
+            file_put_contents(public_path() . "/../app/ApiSources/analytics/unique/$dimension_name.json", $data);
         }
 
         $events = null;
@@ -191,8 +192,8 @@ class grabMarketingStat extends Controller
 
     }
 
-    public function getResultsAnalyticsStatic($compaign_id){
-        $json = file_get_contents(public_path() . "/../app/ApiSources/analytics/analytics.json");
+    public function getResultsAnalyticsStatic($compaign_id, $dimension_name){
+        $json = file_get_contents(public_path() . "/../app/ApiSources/analytics/unique/$dimension_name.json");
         $arr = json_decode($json, true);
         $events = null;
         $compaign_id = explode(',', $compaign_id);
@@ -215,7 +216,7 @@ class grabMarketingStat extends Controller
     }
 
 
-    public function getResultsAnalyticsUsers($reports, $compaign_id)
+    public function getResultsAnalyticsUsers($reports, $compaign_id, $dimension_name)
     {
         $arr = [];
         for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
@@ -237,7 +238,7 @@ class grabMarketingStat extends Controller
             }
 
             $data = json_encode($arr);
-            file_put_contents(public_path() . "/../app/ApiSources/analytics/users.json", $data);
+            file_put_contents(public_path() . "/../app/ApiSources/analytics/users/$dimension_name.json", $data);
         }
         $users = null;
         $compaign_id = explode(',', $compaign_id);
@@ -259,8 +260,8 @@ class grabMarketingStat extends Controller
 
     }
 
-    public function getResultsAnalyticsUsersStatic($compaign_id){
-        $json = file_get_contents(public_path() . "/../app/ApiSources/analytics/users.json");
+    public function getResultsAnalyticsUsersStatic($compaign_id, $dimension_name){
+        $json = file_get_contents(public_path() . "/../app/ApiSources/analytics/users/$dimension_name.json");
         $arr = json_decode($json, true);
         $users = null;
 
@@ -490,8 +491,12 @@ clientCustomerId = "' . $customer_id . '"
                 array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.zip"));
             }
 
-            if (glob(public_path() . "/../app/ApiSources/analytics/*.json")) {
-                array_map('unlink', glob(public_path() . "/../app/ApiSources/analytics/*.json"));
+            if (glob(public_path() . "/../app/ApiSources/analytics/users/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/analytics/users/*.json"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/analytics/unique/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/analytics/unique/*.json"));
             }
 
             if (glob(public_path() . "/../app/ApiSources/adwords/*.csv")) {
@@ -524,20 +529,22 @@ clientCustomerId = "' . $customer_id . '"
                                     self::getReportAdwordsStatic($customer_id, $compaign_id,  1);
                                 }
 
-                                $DownloadPathEvents = public_path() . "/../app/ApiSources/analytics/analytics.json";
-                                $DownloadPathUsers = public_path() . "/../app/ApiSources/analytics/users.json";
+                                $DownloadPathEvents = public_path() . "/../app/ApiSources/analytics/unique/adwords.json";
+                                $DownloadPathUsers = public_path() . "/../app/ApiSources/analytics/users/adwords.json";
                                 if (!file_exists($DownloadPathEvents)) {
-                                    $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to);
-                                    $this->getResultsAnalytics($responseAnalyticsReport, $compaign_id);
+                                    $dimension_name = 'ga:adwordsCampaignID';
+                                    $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                    $this->getResultsAnalytics($responseAnalyticsReport, $compaign_id, 'adwords');
                                 } else {
-                                    $this->getResultsAnalyticsStatic($compaign_id);
+                                    $this->getResultsAnalyticsStatic($compaign_id, 'adwords');
                                 }
 
                                 if (!file_exists($DownloadPathUsers)) {
-                                    $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to);
-                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id);
+                                    $dimension_name = 'ga:adwordsCampaignID';
+                                    $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, 'adwords');
                                 } else {
-                                    $this->getResultsAnalyticsUsersStatic($compaign_id);
+                                    $this->getResultsAnalyticsUsersStatic($compaign_id, 'adwords');
                                 }
 
                             } else {
@@ -576,8 +583,29 @@ clientCustomerId = "' . $customer_id . '"
                             }
                             if ($ProcessingArbitary) {
                                 self::grabBing($customer_id, $compaign_id, 1, $date_from, $date_to, $request);
-                                array_push($this->inputArbitaryEvents, array(null));
-                                array_push($this->inputArbitaryUsers, array(null));
+                                //array_push($this->inputArbitaryEvents, array(null));
+                                //array_push($this->inputArbitaryUsers, array(null));
+
+                                $DownloadPathEvents = public_path() . "/../app/ApiSources/analytics/unique/bing.json";
+                                $DownloadPathUsers = public_path() . "/../app/ApiSources/analytics/users/bing.json";
+                                if (!file_exists($DownloadPathEvents)) {
+                                    $dimension_name = 'ga:dimension11';
+                                    $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                    $this->getResultsAnalytics($responseAnalyticsReport, $compaign_id, 'bing');
+                                } else {
+                                    $this->getResultsAnalyticsStatic($compaign_id, 'bing');
+                                }
+
+                                if (!file_exists($DownloadPathUsers)) {
+                                    $dimension_name = 'ga:dimension11';
+                                    $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, 'bing');
+                                } else {
+                                    $this->getResultsAnalyticsUsersStatic($compaign_id, 'bing');
+                                }
+
+
+
                             } else {
                                 $date_from_this_month = date('Y-m-01');
                                 $date_to_this_month = date('Y-m-d');
