@@ -146,7 +146,7 @@ class grabMarketingStat extends Controller
     }
 
 
-    public function getResultsAnalytics($reports, $compaign_id, $dimension_name)
+    public function getResultsAnalyticsUnique($reports, $compaign_id, $dimension_name)
     {
         $arr = [];
         for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
@@ -192,7 +192,7 @@ class grabMarketingStat extends Controller
 
     }
 
-    public function getResultsAnalyticsStatic($compaign_id, $dimension_name){
+    public function getResultsAnalyticsUniqueStatic($compaign_id, $dimension_name){
         $json = file_get_contents(public_path() . "/../app/ApiSources/analytics/unique/$dimension_name.json");
         $arr = json_decode($json, true);
         $events = null;
@@ -531,20 +531,21 @@ clientCustomerId = "' . $customer_id . '"
 
                                 $DownloadPathEvents = public_path() . "/../app/ApiSources/analytics/unique/adwords.json";
                                 $DownloadPathUsers = public_path() . "/../app/ApiSources/analytics/users/adwords.json";
+                                $dimension_name = 'ga:adwordsCampaignID';
+                                $report_name = 'adwords';
+
                                 if (!file_exists($DownloadPathEvents)) {
-                                    $dimension_name = 'ga:adwordsCampaignID';
                                     $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                    $this->getResultsAnalytics($responseAnalyticsReport, $compaign_id, 'adwords');
+                                    $this->getResultsAnalyticsUnique($responseAnalyticsReport, $compaign_id, $report_name);
                                 } else {
-                                    $this->getResultsAnalyticsStatic($compaign_id, 'adwords');
+                                    $this->getResultsAnalyticsUniqueStatic($compaign_id, $report_name);
                                 }
 
                                 if (!file_exists($DownloadPathUsers)) {
-                                    $dimension_name = 'ga:adwordsCampaignID';
                                     $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, 'adwords');
+                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, $report_name);
                                 } else {
-                                    $this->getResultsAnalyticsUsersStatic($compaign_id, 'adwords');
+                                    $this->getResultsAnalyticsUsersStatic($compaign_id, $report_name);
                                 }
 
                             } else {
@@ -588,23 +589,23 @@ clientCustomerId = "' . $customer_id . '"
 
                                 $DownloadPathEvents = public_path() . "/../app/ApiSources/analytics/unique/bing.json";
                                 $DownloadPathUsers = public_path() . "/../app/ApiSources/analytics/users/bing.json";
+                                $dimension_name = 'ga:dimension11';
+                                $report_name = 'bing';
+                                //grab data from analytics
                                 if (!file_exists($DownloadPathEvents)) {
-                                    $dimension_name = 'ga:dimension11';
                                     $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                    $this->getResultsAnalytics($responseAnalyticsReport, $compaign_id, 'bing');
+                                    $this->getResultsAnalyticsUnique($responseAnalyticsReport, $compaign_id, $report_name);
                                 } else {
-                                    $this->getResultsAnalyticsStatic($compaign_id, 'bing');
+                                    $this->getResultsAnalyticsUniqueStatic($compaign_id, $report_name);
                                 }
 
                                 if (!file_exists($DownloadPathUsers)) {
-                                    $dimension_name = 'ga:dimension11';
                                     $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, 'bing');
+                                    $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $compaign_id, $report_name);
                                 } else {
-                                    $this->getResultsAnalyticsUsersStatic($compaign_id, 'bing');
+                                    $this->getResultsAnalyticsUsersStatic($compaign_id, $report_name);
                                 }
-
-
+                                //end grab data from analytics
 
                             } else {
                                 $date_from_this_month = date('Y-m-01');
