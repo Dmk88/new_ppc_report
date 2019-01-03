@@ -645,6 +645,7 @@ clientCustomerId = "' . $customer_id . '"
                         } else {
                             array_push($this->input, array(NULL, NULL, NULL, NULL));
                         }
+                        $this->message .= " empty row! <br>";
                     }
                 } else
                     //get empty row
@@ -745,7 +746,15 @@ clientCustomerId = "' . $customer_id . '"
 
         $DownloadPath = public_path() . "/../app/ApiSources/bingReport/" . $customer_id . ".zip";
         if (!file_exists($DownloadPath)) {
-            BingReport::getReport($request, $date_from, $date_to, $customer_id);
+            $report = BingReport::getReport($request, $date_from, $date_to, $customer_id);
+            if($report === false){
+                if ($arbitary != 0) {
+                    array_push($this->inputArbitary, array(0, 0, 0, 0));
+                } else {
+                    array_push($this->input, array(0, 0, 0, 0));
+                }
+                $this->message .= " empty report! <br>";
+            }
         }
         if (file_exists($DownloadPath)) {
             $filePath = $this->extractFile($DownloadPath);
@@ -765,7 +774,6 @@ clientCustomerId = "' . $customer_id . '"
                     $Conversion += $data['conversions'];
                 }
 
-            $data = $Click+$Impressions+$Cost+$Conversion;
 
              if ($data !== 0) {
 
@@ -774,17 +782,22 @@ clientCustomerId = "' . $customer_id . '"
                 } else {
                     array_push($this->input, array($Impressions, $Click, $Cost, $Conversion));
                 }
-                 array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
                 $this->message .= " successful! <br>";
+
+                 array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
+
             } else {
                 if ($arbitary != 0) {
                     array_push($this->inputArbitary, array(0, 0, 0, 0));
                 } else {
                     array_push($this->input, array(0, 0, 0, 0));
                 }
-                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
 
                 $this->message .= " invalid campaign_id! <br>";
+
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/bingReport/*.csv"));
+
+
             }
         }
     }
@@ -794,7 +807,7 @@ clientCustomerId = "' . $customer_id . '"
         $archive = new ZipArchive();
 
         if ($archive->open($path) === TRUE) {
-            $archive->extractTo(public_path() . "/../app/ApiSources/bingReport//");
+            $archive->extractTo(public_path() . "/../app/ApiSources/bingReport/");
             $return = public_path() . "/../app/ApiSources/bingReport/" . $archive->statIndex(0)['name'];
             $archive->close();
         } else {

@@ -104,6 +104,7 @@ class BingReportRequest extends Model
                     if($reportDownloadUrl == null)
                     {
                         print "No report data for the submitted request\n";
+                        return false;
                     }
                     else
                     {
