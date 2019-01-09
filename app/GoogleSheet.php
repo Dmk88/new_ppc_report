@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Google_Service_Sheets_ClearValuesRequest;
 
 
 class GoogleSheet extends Model
@@ -26,5 +27,16 @@ class GoogleSheet extends Model
         } else {
             return $values;
         }
+    }
+
+    /**
+     * Delete previous results
+     * @param $spreadsheetId
+     * @param $range
+     */
+    static protected function deletePreviousValues($service, $spreadsheetId, $range)
+    {
+        $clearRequest = new Google_Service_Sheets_ClearValuesRequest();
+        $response = $service->spreadsheets_values->clear($spreadsheetId, $range, $clearRequest);
     }
 }

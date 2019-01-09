@@ -54,3 +54,6 @@ Route::post('/marketing_stat_arbitary', 'grabMarketingStat@get');
 Route::get('/bing', 'grabMarketingStat@grabBing');
 Route::get('/analytics', 'grabMarketingStat@result');
 Route::get('/title_checker', 'TitleCheckerController@index');
+
+Route::get('/marketing_stat_double', 'grabMarketingStatDouble@index');
+Route::post('/marketing_stat_double', 'grabMarketingStatDouble@get');
