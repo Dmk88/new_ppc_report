@@ -30,8 +30,8 @@
             <div id="form-data">
             <form id="Adword-params" action="" method="POST">
                 {{ csrf_field() }}
-                <div class="navbar-brand">From: <input type="date" name="date-from"></div>
-                <div class="navbar-brand">To: <input type="date" name="date-to"></div>
+                <div class="navbar-brand">From: <input type="date" name="date-from" required></div>
+                <div class="navbar-brand">To: <input type="date" name="date-to" required></div>
                 <div class="navbar-brand"><button type="submit" name="action" value="save">Processing</button></div>
             </form>
             </div>
