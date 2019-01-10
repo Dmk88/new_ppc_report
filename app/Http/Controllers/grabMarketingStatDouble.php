@@ -27,7 +27,7 @@ class grabMarketingStatDouble extends Controller
     public $inputArbitary = [];
     public $inputLabel = [];
     public $message = '';
-    public $customers = [2682652198, 3112040897, 4130241238, 6200435280, 8826845921];
+    public $customers = [2682652198, 8826845921];
 
     public function get(Request $request)
     {
@@ -189,7 +189,7 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grab($date_from, $date_to)
+    public function grab($date_from = Null, $date_to = Null)
     {
         ini_set("max_execution_time", 0);
         $default = [
@@ -212,19 +212,29 @@ clientCustomerId = "' . $customer_id . '"
 
         //get ranges of input
         $spreadsheetId = '1ZSK0bQJOD0doie9Xqsfa6KN20etMubKcgtf0gdrM_d4';
-        $CurrentSheet = 'sheet1';
 
-        $rangeInputArbitary = $CurrentSheet . '!G4:J';
-        $rangeLabel = $CurrentSheet . '!A4:F';
+        $ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
+
+        if($ProcessingArbitary){
+            $CurrentSheet = 'Arbitrary range';
+            $during = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to);
+        }
+        else{
+            $CurrentSheet = 'Current Month';
+            $during = date('Ym') . '01, ' . date('Ymd'); // This month
+        }
+
+        $rangeInputArbitary = $CurrentSheet . '!H4:K';
+        $rangeLabel = $CurrentSheet . '!A4:G';
         $rangeArbitaryFrom = $CurrentSheet . '!' . 'E2';
         $rangeArbitaryTo = $CurrentSheet . '!' . 'F2';
+        $rangeFromCurrent = $CurrentSheet . '!' . 'K2';
 
         //$ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
         //$duringCurrent = date('Ym') . '01, ' . date('Ymd'); // This month
 
-        $duringArbitary = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to);
         foreach ($this->customers as $customer_id) {
-            $data = self::getReportAdwords($customer_id, $duringArbitary);
+            $data = self::getReportAdwords($customer_id, $during);
 
             foreach ($data as $value => $item) {
                 if ($item['labels']) {
@@ -253,8 +263,14 @@ clientCustomerId = "' . $customer_id . '"
                     } else {
                         $lab4 = ' - ';
                     }
+                    $customer_name = '';
+                    if($customer_id == '2682652198'){
+                        $customer_name = 'altoroslabs.com';
+                    }elseif($customer_id == '8826845921'){
+                        $customer_name = 'altoros.no';
+                    }
 
-                    array_push($this->inputLabel, array($customer_id, 'Adwords', $lab1, $lab2, $lab3, $lab4));
+                    array_push($this->inputLabel, array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4));
                     array_push($this->inputArbitary, array($Impressions, $Click, $Cost, $Conversion));
                 }
             }
@@ -262,8 +278,16 @@ clientCustomerId = "' . $customer_id . '"
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
 
-        Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryFrom, array(array(date("F j, Y", strtotime($date_from)))));
-        Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryTo, array(array(date("F j, Y", strtotime($date_to)))));
+        if($ProcessingArbitary){
+            Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryFrom, array(array(date("F j, Y", strtotime($date_from)))));
+            Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryTo, array(array(date("F j, Y", strtotime($date_to)))));
+
+        } else {
+            $now = date("F j, Y H:i:s", strtotime('+3 hours'));
+            Sheet::setToSheet($service, $spreadsheetId, $rangeFromCurrent, array(array('updated at '. $now)));
+            Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryTo, array(array(date('F'))));
+
+        }
 
         Sheet::setToSheet($service, $spreadsheetId, $rangeLabel, $this->inputLabel);
         Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);

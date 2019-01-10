@@ -57,3 +57,5 @@ Route::get('/title_checker', 'TitleCheckerController@index');
 
 Route::get('/marketing_stat_double', 'grabMarketingStatDouble@index');
 Route::post('/marketing_stat_double', 'grabMarketingStatDouble@get');
+
+Route::get('/grab_marketing_stat_double/', 'grabMarketingStatDouble@grab');
