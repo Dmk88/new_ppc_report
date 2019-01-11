@@ -76,6 +76,7 @@ class grabMarketingStatDouble extends Controller
     }
 
 
+
     public function getReportAdwords($customer_id, $during)
     {
         ini_set("max_execution_time", 0);
@@ -172,6 +173,7 @@ clientCustomerId = "' . $customer_id . '"
             }
 
             $res = $data;
+            $arr1 = [];
             foreach ($data as $key => $value) {
                 $data[$key]['campaigns'] = array();
                 $data[$key]['campaigns'][] = $key;
@@ -192,6 +194,7 @@ clientCustomerId = "' . $customer_id . '"
                 sort($data[$key]['campaigns']);
 
             }
+
 
             $arrayResult = array_unique($data, SORT_REGULAR);
 
@@ -236,7 +239,7 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         $rangeInputArbitary = $CurrentSheet . '!H4:W';
-        $rangeLabel = $CurrentSheet . '!A4:G';
+        $rangeLabel = $CurrentSheet . '!A4:W';
         $rangeArbitaryFrom = $CurrentSheet . '!' . 'E2';
         $rangeArbitaryTo = $CurrentSheet . '!' . 'F2';
         $rangeFromCurrent = $CurrentSheet . '!' . 'K2';
@@ -288,19 +291,24 @@ clientCustomerId = "' . $customer_id . '"
                         $customer_name = 'altoros.no';
                     }
 
-                    $array_of_values = array($Impressions, $Click, $Cost, $Conversion);
+                    $array_of_values = array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4, $Impressions, $Click, $Cost, $Conversion);
 
                     foreach($Campaigns as &$camp){
                         array_push($array_of_values, $camp);
                     }
-                    array_push($this->inputLabel, array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4));
-                    array_push($this->inputArbitary, $array_of_values);
+
+                    array_push($this->inputLabel, $array_of_values);
+                    //array_push($this->inputArbitary, $array_of_values);
 
 
                 }
             }
         }
-        //var_dump($this->inputArbitary);
+
+        $this->inputLabel = $this->array_msort($this->inputLabel, array('3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
+        $this->inputLabel = array_values($this->inputLabel);
+
+
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
 
@@ -316,7 +324,32 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         Sheet::setToSheet($service, $spreadsheetId, $rangeLabel, $this->inputLabel);
-        Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);
+        //Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);
+
+    }
+
+    private function array_msort($array, $cols)
+    {
+        $colarr = array();
+        foreach ($cols as $col => $order) {
+            $colarr[$col] = array();
+            foreach ($array as $k => $row) { $colarr[$col]['_'.$k] = strtolower($row[$col]); }
+        }
+        $eval = 'array_multisort(';
+        foreach ($cols as $col => $order) {
+            $eval .= '$colarr[\''.$col.'\'],'.$order.',';
+        }
+        $eval = substr($eval,0,-1).');';
+        eval($eval);
+        $ret = array();
+        foreach ($colarr as $col => $arr) {
+            foreach ($arr as $k => $v) {
+                $k = substr($k,1);
+                if (!isset($ret[$k])) $ret[$k] = $array[$k];
+                $ret[$k][$col] = $array[$k][$col];
+            }
+        }
+        return $ret;
 
     }
 
