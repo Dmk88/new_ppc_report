@@ -7,16 +7,16 @@ use App\GoogleSheet as Sheet;
 use Exception;
 use Google;
 use Google\AdsApi\AdWords\AdWordsSession;
+use Google\AdsApi\AdWords\AdWordsSessionBuilder;
+use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
 use Google\AdsApi\AdWords\Reporting\v201809\ReportDownloader;
 use Google\AdsApi\AdWords\ReportSettingsBuilder;
+use Google\AdsApi\Common\ConfigurationLoader;
+use Google\AdsApi\Common\OAuth2TokenBuilder;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_Sheets;
 use Illuminate\Http\Request;
-use Google\AdsApi\AdWords\AdWordsSessionBuilder;
-use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
-use Google\AdsApi\Common\ConfigurationLoader;
-use Google\AdsApi\Common\OAuth2TokenBuilder;
 
 
 class grabMarketingStatDouble extends Controller
@@ -135,11 +135,15 @@ clientCustomerId = "' . $customer_id . '"
                         $data[$row[0]]['conversions'] = 0;
                         $data[$row[0]]['impressions'] = 0;
                         $data[$row[0]]['labels'] = 0;
+                        $data[$row[0]]['campaigns'] = 0;
                     }
                     $data[$row[0]]['clicks'] += $row[1];
                     $data[$row[0]]['impressions'] += $row[2];
                     $data[$row[0]]['cost'] += $row[3];
                     $data[$row[0]]['conversions'] += $row[4];
+
+                    $data[$row[0]]['campaigns'] +=  $row[0];
+
                     $row6 = explode('","', trim($row[6], '"[]'));
                     $row7 = [];
                     foreach ($row6 as $row1) {
@@ -169,7 +173,10 @@ clientCustomerId = "' . $customer_id . '"
 
             $res = $data;
             foreach ($data as $key => $value) {
+                $data[$key]['campaigns'] = array();
+                $data[$key]['campaigns'][] = $key;
                 foreach ($res as $key_res => $value_res) {
+
                     if ($value !== $value_res) {
 
                         if ($value['labels'] === $value_res['labels']) {
@@ -178,12 +185,16 @@ clientCustomerId = "' . $customer_id . '"
                             $data[$key]['conversions'] += $value_res['conversions'];
                             $data[$key]['impressions'] += $value_res['impressions'];
 
+                            $data[$key]['campaigns'][] += $value_res['campaigns'];
                         }
                     }
                 }
+                sort($data[$key]['campaigns']);
+
             }
 
             $arrayResult = array_unique($data, SORT_REGULAR);
+
             return $arrayResult;
         }
 
@@ -224,7 +235,7 @@ clientCustomerId = "' . $customer_id . '"
             $during = date('Ym') . '01, ' . date('Ymd'); // This month
         }
 
-        $rangeInputArbitary = $CurrentSheet . '!H4:K';
+        $rangeInputArbitary = $CurrentSheet . '!H4:W';
         $rangeLabel = $CurrentSheet . '!A4:G';
         $rangeArbitaryFrom = $CurrentSheet . '!' . 'E2';
         $rangeArbitaryTo = $CurrentSheet . '!' . 'F2';
@@ -242,6 +253,13 @@ clientCustomerId = "' . $customer_id . '"
                     $Cost = $item['cost'] / 1000000;
                     $Conversion = $item['conversions'];
                     $Impressions = $item['impressions'];
+                    $Campaigns = $item['campaigns'];
+                    /*$Campaigns = '';
+                    foreach($item['campaigns'] as &$campaign){
+
+                        $Campaigns .= $campaign . ',';
+                    }*/
+
 
                     if (array_key_exists(1, $item['labels'])) {
                         $lab1 = $item['labels'][1];
@@ -270,11 +288,19 @@ clientCustomerId = "' . $customer_id . '"
                         $customer_name = 'altoros.no';
                     }
 
+                    $array_of_values = array($Impressions, $Click, $Cost, $Conversion);
+
+                    foreach($Campaigns as &$camp){
+                        array_push($array_of_values, $camp);
+                    }
                     array_push($this->inputLabel, array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4));
-                    array_push($this->inputArbitary, array($Impressions, $Click, $Cost, $Conversion));
+                    array_push($this->inputArbitary, $array_of_values);
+
+
                 }
             }
         }
+        //var_dump($this->inputArbitary);
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
 
