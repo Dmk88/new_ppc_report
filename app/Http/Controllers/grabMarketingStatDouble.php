@@ -7,20 +7,26 @@ use App\GoogleSheet as Sheet;
 use Exception;
 use Google;
 use Google\AdsApi\AdWords\AdWordsSession;
-use Google\AdsApi\AdWords\AdWordsSessionBuilder;
-use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
 use Google\AdsApi\AdWords\Reporting\v201809\ReportDownloader;
 use Google\AdsApi\AdWords\ReportSettingsBuilder;
-use Google\AdsApi\Common\ConfigurationLoader;
-use Google\AdsApi\Common\OAuth2TokenBuilder;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
+use Google_Service_AnalyticsReporting_DateRange;
+use Google_Service_AnalyticsReporting_Dimension;
+use Google_Service_AnalyticsReporting_DimensionFilter;
+use Google_Service_AnalyticsReporting_DimensionFilterClause;
+use Google_Service_AnalyticsReporting_GetReportsRequest;
+use Google_Service_AnalyticsReporting_Metric;
+use Google_Service_AnalyticsReporting_ReportRequest;
 use Google_Service_Sheets;
 use Illuminate\Http\Request;
 
 
 class grabMarketingStatDouble extends Controller
 {
+
+    public $inputArbitaryEvents = [];
+    public $inputArbitaryUsers = [];
 
     const PAGE_LIMIT = 500;
     public $input = [];
@@ -79,7 +85,7 @@ class grabMarketingStatDouble extends Controller
 
     public function getReportAdwords($customer_id, $during)
     {
-        ini_set("max_execution_time", 0);
+        /*ini_set("max_execution_time", 0);
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
         $config = '[ADWORDS]
@@ -104,7 +110,7 @@ clientCustomerId = "' . $customer_id . '"
         $stringReport = self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport = explode(',', $stringReport);
 
-        file_put_contents(public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv", $stringReport);
+        file_put_contents(public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv", $stringReport);*/
 
 
         $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv"));
@@ -293,7 +299,59 @@ clientCustomerId = "' . $customer_id . '"
 
                     $array_of_values = array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4, $Impressions, $Click, $Cost, $Conversion);
 
-                    foreach($Campaigns as &$camp){
+
+                    $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/adwords.json";
+                    $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/adwords.json";
+                    $dimension_name = 'ga:adwordsCampaignID';
+                    $report_name = 'adwords';
+                    $events = 0;
+                    $users = 0;
+
+                    foreach ($Campaigns as &$camp) {
+                        if ($ProcessingArbitary) {
+                            if (!file_exists($DownloadPathEvents)) {
+                                $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                $eventsCamp = $this->getResultsAnalyticsUnique($responseAnalyticsReport, $camp, $report_name);
+                            } else {
+                                $eventsCamp = $this->getResultsAnalyticsUniqueStatic($camp, $report_name);
+                            }
+
+                            if (!file_exists($DownloadPathUsers)) {
+                                $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
+                                $usersCamp = $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $camp, $report_name);
+                            } else {
+                                $usersCamp = $this->getResultsAnalyticsUsersStatic($camp, $report_name);
+                            }
+                            $users += $usersCamp;
+                            $events += $eventsCamp;
+                        } else
+                        {
+                            $date_from_this_month = date('Y-m-01');
+                               $date_to_now = date('Y-m-d');
+
+                            if (!file_exists($DownloadPathEvents)) {
+                                $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from_this_month, $date_to_now, $dimension_name);
+                                $eventsCamp = $this->getResultsAnalyticsUnique($responseAnalyticsReport, $camp, $report_name);
+                            } else {
+                                $eventsCamp = $this->getResultsAnalyticsUniqueStatic($camp, $report_name);
+                            }
+
+                            if (!file_exists($DownloadPathUsers)) {
+                                $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from_this_month, $date_to_now, $dimension_name);
+                                $usersCamp = $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $camp, $report_name);
+                            } else {
+                                $usersCamp = $this->getResultsAnalyticsUsersStatic($camp, $report_name);
+                            }
+
+                            $users += $usersCamp;
+                            $events += $eventsCamp;
+                        }
+                    }
+
+                    array_push($array_of_values, $events);
+                    array_push($array_of_values, $users);
+
+                    foreach ($Campaigns as &$camp) {
                         array_push($array_of_values, $camp);
                     }
 
@@ -304,12 +362,14 @@ clientCustomerId = "' . $customer_id . '"
                 }
             }
         }
+//var_dump($this->inputLabel);
 
         $this->inputLabel = $this->array_msort($this->inputLabel, array('3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
         $this->inputLabel = array_values($this->inputLabel);
 
+//var_dump($this->inputLabel);
 
-        Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
+                Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
         Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
 
         if($ProcessingArbitary){
@@ -352,5 +412,205 @@ clientCustomerId = "' . $customer_id . '"
         return $ret;
 
     }
+
+
+    public static function getReportAnalyticsEvents(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
+    {
+        // Replace with your view ID, for example XXXX.
+        $VIEW_ID = "169690080";
+
+        // Create the DateRange object.
+        $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+        $dateRange->setStartDate("$date_from");
+        $dateRange->setEndDate("$date_to");
+
+        // Create the Metrics object.
+        //$metrics = new Google_Service_AnalyticsReporting_Metric();
+        //$metrics->setExpression("ga:totalEvents");
+
+        $metrics2 = new Google_Service_AnalyticsReporting_Metric();
+        $metrics2->setExpression("ga:uniqueEvents");
+
+
+        $dimensions = new Google_Service_AnalyticsReporting_Dimension();
+        $dimensions->setName($dimension_name);
+
+
+        $dimensions2 = new Google_Service_AnalyticsReporting_Dimension();
+        $dimensions2->setName('ga:eventAction');
+
+
+        // Create the DimensionFilter.
+        $dimensionFilter = new Google_Service_AnalyticsReporting_DimensionFilter();
+        $dimensionFilter->setDimensionName('ga:eventAction');
+        $dimensionFilter->setOperator('EXACT');
+        $dimensionFilter->setExpressions(array('More than 30 seconds'));
+
+// Create the DimensionFilterClauses
+        $dimensionFilterClause = new Google_Service_AnalyticsReporting_DimensionFilterClause();
+        $dimensionFilterClause->setFilters(array($dimensionFilter));
+
+        // Create the ReportRequest object.
+        $request = new Google_Service_AnalyticsReporting_ReportRequest();
+        $request->setViewId($VIEW_ID);
+        $request->setDateRanges($dateRange);
+        $request->setMetrics(array( $metrics2));
+        $request->setDimensions(array($dimensions, $dimensions2));
+        $request->setDimensionFilterClauses(array($dimensionFilterClause));
+
+        $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+        $body->setReportRequests( array( $request) );
+        return $analytics->reports->batchGet($body);
+    }
+
+
+    public function getResultsAnalyticsUnique($reports, $compaign_id, $dimension_name)
+    {
+        $arr = [];
+        for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
+            $report = $reports[$reportIndex];
+            $header = $report->getColumnHeader();
+            $dimensionHeaders = $header->getDimensions();
+            $metricHeaders = $header->getMetricHeader()->getMetricHeaderEntries();
+            $rows = $report->getData()->getRows();
+
+            for ($rowIndex = 0; $rowIndex < count($rows); $rowIndex++) {
+                $row = $rows[$rowIndex];
+                $dimensions = $row->getDimensions();
+                $metrics = $row->getMetrics();
+
+                for ($j = 0; $j < count($metrics); $j++) {
+                    $values = $metrics[$j]->getValues();
+                    $arr[] = array_merge($dimensions, $values);
+                }
+            }
+
+            $data = json_encode($arr);
+            file_put_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json", $data);
+        }
+
+        $events = null;
+        $compaign_id = explode(',', $compaign_id);
+
+        foreach ($compaign_id as $comp) {
+            foreach ($arr as $val) {
+
+                if ($val[0] == $comp) {
+                    $events += $val[2];
+                }
+            }
+        }
+
+
+        return $events;
+    }
+
+    public function getResultsAnalyticsUniqueStatic($compaign_id, $dimension_name){
+        $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json");
+        $arr = json_decode($json, true);
+        $events = null;
+        $compaign_id = explode(',', $compaign_id);
+
+        foreach ($compaign_id as $comp) {
+            foreach ($arr as $val) {
+
+                if ($val[0] == $comp) {
+                    $events += $val[2];
+                }
+            }
+        }
+
+        return $events;
+    }
+
+
+    public static function getReportAnalyticsUsers(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
+    {
+        // Replace with your view ID, for example XXXX.
+        $VIEW_ID = "169690080";
+
+        // Create the DateRange object.
+        $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+        $dateRange->setStartDate("$date_from");
+        $dateRange->setEndDate("$date_to");
+
+        $metrics = new Google_Service_AnalyticsReporting_Metric();
+        $metrics->setExpression("ga:users");
+
+
+        $dimensions = new Google_Service_AnalyticsReporting_Dimension();
+        $dimensions->setName($dimension_name);
+
+        // Create the ReportRequest object.
+        $request = new Google_Service_AnalyticsReporting_ReportRequest();
+        $request->setViewId($VIEW_ID);
+        $request->setDateRanges($dateRange);
+        $request->setMetrics(array( $metrics));
+        $request->setDimensions(array($dimensions));
+
+        $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+        $body->setReportRequests( array( $request) );
+        return $analytics->reports->batchGet($body);
+    }
+
+    public function getResultsAnalyticsUsers($reports, $compaign_id, $dimension_name)
+    {
+        $arr = [];
+        for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
+            $report = $reports[$reportIndex];
+            $header = $report->getColumnHeader();
+            $dimensionHeaders = $header->getDimensions();
+            $metricHeaders = $header->getMetricHeader()->getMetricHeaderEntries();
+            $rows = $report->getData()->getRows();
+
+            for ($rowIndex = 0; $rowIndex < count($rows); $rowIndex++) {
+                $row = $rows[$rowIndex];
+                $dimensions = $row->getDimensions();
+                $metrics = $row->getMetrics();
+
+                for ($j = 0; $j < count($metrics); $j++) {
+                    $values = $metrics[$j]->getValues();
+                    $arr[] = array_merge($dimensions, $values);
+                }
+            }
+
+            $data = json_encode($arr);
+            file_put_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json", $data);
+        }
+        $users = null;
+        $compaign_id = explode(',', $compaign_id);
+        foreach ($compaign_id as $comp) {
+            foreach ($arr as $val) {
+
+                if ($val[0] == $comp) {
+                    $users += $val[1];
+                }
+            }
+        }
+
+        return $users;
+
+    }
+
+    public function getResultsAnalyticsUsersStatic($compaign_id, $dimension_name){
+        $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json");
+        $arr = json_decode($json, true);
+        $users = null;
+
+        $compaign_id = explode(',', $compaign_id);
+        foreach ($compaign_id as $comp) {
+            foreach ($arr as $val) {
+
+                if ($val[0] == $comp) {
+                    $users += $val[1];
+                }
+            }
+        }
+
+
+        return $users;
+    }
+
+
 
 }
