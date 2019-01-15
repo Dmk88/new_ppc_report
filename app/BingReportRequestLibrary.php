@@ -16,6 +16,7 @@ use Microsoft\BingAds\V12\Reporting\PollGenerateReportRequest;
 use Microsoft\BingAds\V12\Reporting\AccountPerformanceReportRequest;
 use Microsoft\BingAds\V12\Reporting\AudiencePerformanceReportRequest;
 use Microsoft\BingAds\V12\Reporting\KeywordPerformanceReportRequest;
+use Microsoft\BingAds\V12\Reporting\CampaignPerformanceReportRequest;
 use Microsoft\BingAds\V12\Reporting\ReportFormat;
 use Microsoft\BingAds\V12\Reporting\ReportAggregation;
 use Microsoft\BingAds\V12\Reporting\AccountThroughAdGroupReportScope;
@@ -30,6 +31,7 @@ use Microsoft\BingAds\V12\Reporting\DeviceTypeReportFilter;
 use Microsoft\BingAds\V12\Reporting\AccountPerformanceReportColumn;
 use Microsoft\BingAds\V12\Reporting\AudiencePerformanceReportColumn;
 use Microsoft\BingAds\V12\Reporting\KeywordPerformanceReportColumn;
+use Microsoft\BingAds\V12\Reporting\CampaignPerformanceReportColumn;
 use Microsoft\BingAds\V12\Reporting\ReportRequestStatusType;
 use Microsoft\BingAds\V12\Reporting\KeywordPerformanceReportSort;
 use Microsoft\BingAds\V12\Reporting\SortOrder;
@@ -219,6 +221,72 @@ class BingReportRequestLibrary extends Model
         );
 
         $encodedReport = new SoapVar($report, SOAP_ENC_OBJECT, 'AudiencePerformanceReportRequest', $GLOBALS['ReportingProxy']->GetNamespace());
+
+        return $encodedReport;
+    }
+
+
+    static function GetCampaignPerformanceReportRequest($accountId, $fromDate, $toDate)
+    {
+        $report = new CampaignPerformanceReportRequest();
+
+        $report->Format = ReportFormat::Csv;
+        $report->ReportName = 'My Campaign Performance Report';
+        $report->ReturnOnlyCompleteData = false;
+        $report->Aggregation = ReportAggregation::Daily;
+
+        $report->Scope = new AccountThroughAdGroupReportScope();
+        $report->Scope->AccountIds = array();
+        $report->Scope->AccountIds[] = $accountId;
+        $report->Scope->AdGroups = null;
+        $report->Scope->Campaigns = null;
+
+        $report->Time = new ReportTime();
+
+        //  You may either use a custom date range or predefined time.
+        date_default_timezone_set('UTC');
+
+        $dateBegin = new DateTime($fromDate);
+        $dateEnd = new DateTime($toDate);
+
+        $report->Time = new ReportTime();
+        $report->Time->CustomDateRangeStart = new Date();
+        $report->Time->CustomDateRangeStart->Month = $dateBegin->format('n');
+        $report->Time->CustomDateRangeStart->Day = $dateBegin->format('j');
+        $report->Time->CustomDateRangeStart->Year = $dateBegin->format('Y');
+        $report->Time->CustomDateRangeEnd = new Date();
+        $report->Time->CustomDateRangeEnd->Month = $dateEnd->format('n');
+        $report->Time->CustomDateRangeEnd->Day = $dateEnd->format('j');
+        $report->Time->CustomDateRangeEnd->Year = $dateEnd->format('Y');
+
+        //  If you specify a filter, results may differ from data you see in the Bing Ads web application
+        //  $report->Filter = new KeywordPerformanceReportFilter();
+        //  $report->Filter->DeviceType = array (
+        //      DeviceTypeReportFilter::Computer,
+        //      DeviceTypeReportFilter::SmartPhone
+        //  );
+
+        $report->Columns = array (
+            CampaignPerformanceReportColumn::CampaignId,
+            CampaignPerformanceReportColumn::Clicks,
+            CampaignPerformanceReportColumn::Spend,
+            CampaignPerformanceReportColumn::Conversions,
+            CampaignPerformanceReportColumn::Impressions,
+            CampaignPerformanceReportColumn::CampaignLabels,
+        );
+
+        // You may optionally sort by any KeywordPerformanceReportColumn, and optionally
+        // specify the maximum number of rows to return in the sorted report.
+
+        /*$report->Sort = array ();
+        $keywordPerformanceReportSort = new KeywordPerformanceReportSort();
+        $keywordPerformanceReportSort->SortColumn = KeywordPerformanceReportColumn::Clicks;
+        $keywordPerformanceReportSort->SortOrder = SortOrder::Ascending;
+        $report->Sort[] = $keywordPerformanceReportSort;*/
+
+//        $report->MaxRows = 10;
+
+        $encodedReport = new SoapVar($report, SOAP_ENC_OBJECT, 'CampaignPerformanceReportRequest', $GLOBALS['ReportingProxy']->GetNamespace());
 
         return $encodedReport;
     }

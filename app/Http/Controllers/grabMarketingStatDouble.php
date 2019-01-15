@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Api\GoogleClient;
+use App\BingReportRequest as BingReport;
 use App\GoogleSheet as Sheet;
 use Exception;
 use Google;
@@ -18,8 +19,15 @@ use Google_Service_AnalyticsReporting_DimensionFilterClause;
 use Google_Service_AnalyticsReporting_GetReportsRequest;
 use Google_Service_AnalyticsReporting_Metric;
 use Google_Service_AnalyticsReporting_ReportRequest;
+
+use Google\AdsApi\AdWords\AdWordsSessionBuilder;
+use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
+use Google\AdsApi\Common\ConfigurationLoader;
+use Google\AdsApi\Common\OAuth2TokenBuilder;
+
 use Google_Service_Sheets;
 use Illuminate\Http\Request;
+use ZipArchive;
 
 
 class grabMarketingStatDouble extends Controller
@@ -33,7 +41,9 @@ class grabMarketingStatDouble extends Controller
     public $inputArbitary = [];
     public $inputLabel = [];
     public $message = '';
-    public $customers = [2682652198, 8826845921];
+    public $customers = [2682652198, 8826845921, 858558, 17182159];
+    public $customersBing = [858558, 17182159];
+    public $customersAdword = [2682652198, 8826845921];
 
     public function get(Request $request)
     {
@@ -52,7 +62,8 @@ class grabMarketingStatDouble extends Controller
                 }
             }
             //var_dump($data);
-            self::grab($data['date-from'], $data['date-to']);
+            self::grab($data['date-from'], $data['date-to'], $request);
+
         } catch (Exception $e) {
             dd($e);
             return false;
@@ -62,6 +73,7 @@ class grabMarketingStatDouble extends Controller
 
     public function index(Request $request)
     {
+
         return view('ppc_double.index', ["message" => $this->message]);
     }
 
@@ -85,7 +97,7 @@ class grabMarketingStatDouble extends Controller
 
     public function getReportAdwords($customer_id, $during)
     {
-        /*ini_set("max_execution_time", 0);
+        ini_set("max_execution_time", 0);
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
         $configurationLoader = new ConfigurationLoader();
         $config = '[ADWORDS]
@@ -110,12 +122,12 @@ clientCustomerId = "' . $customer_id . '"
         $stringReport = self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport = explode(',', $stringReport);
 
-        file_put_contents(public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv", $stringReport);*/
+        file_put_contents(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv", $stringReport);
 
 
-        $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv"));
+        $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv"));
 
-        $path = public_path() . "/../app/ApiSources/double/" . $customer_id . ".csv";
+        $path = public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv";
         if (is_file($path)) {
             $reader = @fopen($path, "r");
             while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
@@ -209,7 +221,7 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function grab($date_from = Null, $date_to = Null)
+    public function grab($date_from = Null, $date_to = Null, Request $request)
     {
         ini_set("max_execution_time", 0);
         $default = [
@@ -238,10 +250,14 @@ clientCustomerId = "' . $customer_id . '"
         if($ProcessingArbitary){
             $CurrentSheet = 'Arbitrary range';
             $during = str_replace('-', '', $date_from) . ', ' . str_replace('-', '', $date_to);
+            $date_start = $date_from;
+            $date_end = $date_to;
         }
-        else{
+        else {
             $CurrentSheet = 'Current Month';
             $during = date('Ym') . '01, ' . date('Ymd'); // This month
+            $date_start = date('Y-m-01');
+            $date_end = date('Y-m-d');
         }
 
         $rangeInputArbitary = $CurrentSheet . '!H4:W';
@@ -253,13 +269,40 @@ clientCustomerId = "' . $customer_id . '"
         //$ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
         //$duringCurrent = date('Ym') . '01, ' . date('Ymd'); // This month
 
+        if (glob(public_path() . "/../app/ApiSources/double/bing/*")) {
+            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/bing/*"));
+        }
+
+        if (glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json")) {
+            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json"));
+        }
+
+        if (glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json")) {
+            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json"));
+        }
+
+        if (glob(public_path() . "/../app/ApiSources/double/adwords/*.csv")) {
+            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/adwords/*.csv"));
+        }
+
         foreach ($this->customers as $customer_id) {
-            $data = self::getReportAdwords($customer_id, $during);
+
+            if (in_array($customer_id, $this->customersBing)) {
+                $data = $this->grabBing($customer_id, $date_start, $date_end, $request);
+            } elseif (in_array($customer_id, $this->customersAdword)) {
+                $data = self::getReportAdwords($customer_id, $during);
+            }
+
 
             foreach ($data as $value => $item) {
                 if ($item['labels']) {
                     $Click = $item['clicks'];
-                    $Cost = $item['cost'] / 1000000;
+                    if(in_array($customer_id, $this->customersBing)){
+                        $Cost = $item['cost'];
+                    } elseif (in_array($customer_id, $this->customersAdword)) {
+                        $Cost = $item['cost'] / 1000000;
+                    }
+
                     $Conversion = $item['conversions'];
                     $Impressions = $item['impressions'];
                     $Campaigns = $item['campaigns'];
@@ -291,22 +334,44 @@ clientCustomerId = "' . $customer_id . '"
                         $lab4 = ' - ';
                     }
                     $customer_name = '';
-                    if($customer_id == '2682652198'){
+                    if($customer_id == '2682652198' || $customer_id == '858558'){
                         $customer_name = 'altoroslabs.com';
-                    }elseif($customer_id == '8826845921'){
+
+                    }elseif($customer_id == '8826845921' || $customer_id == '17182159'){
                         $customer_name = 'altoros.no';
                     }
+                    $source = '';
+                    if (in_array($customer_id, $this->customersAdword)) {
+                        $source = 'Adwords';
+                    } elseif (in_array($customer_id, $this->customersBing)) {
+                        $source = 'Bing';
+                    }
 
-                    $array_of_values = array($customer_id,$customer_name, 'Adwords', $lab1, $lab2, $lab3, $lab4, $Impressions, $Click, $Cost, $Conversion);
+                    $array_of_values = array($customer_id,$customer_name, $source, $lab1, $lab2, $lab3, $lab4, $Impressions, $Click, $Cost, $Conversion);
 
+                    $DownloadPathEvents = '';
+                    $DownloadPathUsers = '';
+                    $dimension_name = '';
+                    $report_name = '';
 
-                    $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/adwords.json";
-                    $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/adwords.json";
-                    $dimension_name = 'ga:adwordsCampaignID';
-                    $report_name = 'adwords';
+                    if (in_array($customer_id, $this->customersAdword)) {
+
+                        $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/adwords.json";
+                        $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/adwords.json";
+                        $dimension_name = 'ga:adwordsCampaignID';
+                        $report_name = 'adwords';
+
+                    } elseif (in_array($customer_id, $this->customersBing)) {
+
+                        $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/bing.json";
+                        $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/bing.json";
+                        $dimension_name = 'ga:dimension11';
+                        $report_name = 'bing';
+
+                    }
+
                     $events = 0;
                     $users = 0;
-
                     foreach ($Campaigns as &$camp) {
                         if ($ProcessingArbitary) {
                             if (!file_exists($DownloadPathEvents)) {
@@ -364,7 +429,7 @@ clientCustomerId = "' . $customer_id . '"
         }
 //var_dump($this->inputLabel);
 
-        $this->inputLabel = $this->array_msort($this->inputLabel, array('3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
+        $this->inputLabel = $this->array_msort($this->inputLabel, array('2' =>SORT_ASC, '3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
         $this->inputLabel = array_values($this->inputLabel);
 
 //var_dump($this->inputLabel);
@@ -611,6 +676,137 @@ clientCustomerId = "' . $customer_id . '"
         return $users;
     }
 
+    public function grabBing($customer_id, $date_from = null, $date_to = null, Request $request)
+    {
+
+        $DownloadPath = public_path() . "/../app/ApiSources/double/bing/" . $customer_id . ".zip";
+        if (!file_exists($DownloadPath)) {
+            $report = BingReport::getReportDouble( $request, $date_from, $date_to, $customer_id);
+            if($report === false){
+               return array();
+            }
+        }
+
+        if (file_exists($DownloadPath)) {
+            $filePath = $this->extractFile($DownloadPath);
+
+            if (is_file($filePath)) {
+                $reader = @fopen($filePath, "r");
+
+                while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
+
+                    if ($row[0] == 'CampaignId' &&
+                        $row[1] == 'Clicks' &&
+                        $row[2] == 'Spend' &&
+                        $row[3] == 'Conversions' &&
+                        $row[4] == 'Impressions' &&
+                        $row[5] == 'CampaignLabels') {
+                        break;
+                    }
+                }
+                $data = array();
+                while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
+
+                    if (isset($row[0]) &&
+                        isset($row[1]) &&
+                        isset($row[2]) &&
+                        isset($row[3]) &&
+                        isset($row[4]) &&
+                        isset($row[5])
+                    ) {
+
+                        if (!isset($data[$row[0]])) {
+                            $data[$row[0]]['clicks'] = 0;
+                            $data[$row[0]]['cost'] = 0;
+                            $data[$row[0]]['conversions'] = 0;
+                            $data[$row[0]]['impressions'] = 0;
+                            $data[$row[0]]['labels'] = 0;
+                            $data[$row[0]]['campaigns'] = 0;
+                        }
+                        $data[$row[0]]['clicks'] += $row[1];
+                        $data[$row[0]]['impressions'] += $row[4];
+                        $data[$row[0]]['cost'] += $row[2];
+                        $data[$row[0]]['conversions'] += $row[3];
+
+                        $data[$row[0]]['campaigns'] +=  $row[0];
+
+                        $row6 = explode(';', $row[5]);
+                        $row7 = [];
+
+                        foreach ($row6 as $row1) {
+
+                            $row12 = explode('-', $row1);
+                            switch ($row12[0]) {
+                                case 1:
+                                    $row7[1] = $row1;
+                                    break;
+                                case 2:
+                                    $row7[2] = $row1;
+                                    break;
+                                case 3:
+                                    $row7[3] = $row1;
+                                    break;
+                                case 4:
+                                    $row7[4] = $row1;
+                                    break;
+                            }
+                            ksort($row7);
+                        }
+
+                        $data[$row[0]]['labels'] = $row7;
+
+
+                    }
+                }
+
+                $res = $data;
+                foreach ($data as $key => $value) {
+                    $data[$key]['campaigns'] = array();
+                    $data[$key]['campaigns'][] = $key;
+                    foreach ($res as $key_res => $value_res) {
+
+                        if ($value !== $value_res) {
+
+                            if ($value['labels'] === $value_res['labels']) {
+                                $data[$key]['clicks'] += $value_res['clicks'];
+                                $data[$key]['cost'] += $value_res['cost'];
+                                $data[$key]['conversions'] += $value_res['conversions'];
+                                $data[$key]['impressions'] += $value_res['impressions'];
+
+                                $data[$key]['campaigns'][] += $value_res['campaigns'];
+                            }
+                        }
+                    }
+                    sort($data[$key]['campaigns']);
+
+                }
+
+
+                $arrayResult = array_unique($data, SORT_REGULAR);
+
+
+                return $arrayResult;
+
+            }
+
+            }
+
+    }
+
+    public function extractFile($path)
+    {
+        $archive = new ZipArchive();
+
+        if ($archive->open($path) === TRUE) {
+            $archive->extractTo(public_path() . "/../app/ApiSources/double/bing/");
+            $return = public_path() . "/../app/ApiSources/double/bing/" . $archive->statIndex(0)['name'];
+            $archive->close();
+        } else {
+            throw new Exception ("Decompress operation from ZIP file failed.");
+        }
+
+        return $return;
+    }
 
 
 }
