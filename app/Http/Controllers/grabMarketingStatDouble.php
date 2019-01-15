@@ -449,6 +449,7 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         Sheet::setToSheet($service, $spreadsheetId, $rangeLabel, $this->inputLabel);
+        $this->message .= "Processing complete successfull!<br>";
         //Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);
 
     }
@@ -681,7 +682,7 @@ clientCustomerId = "' . $customer_id . '"
 
         $DownloadPath = public_path() . "/../app/ApiSources/double/bing/" . $customer_id . ".zip";
         if (!file_exists($DownloadPath)) {
-            $report = BingReport::getReportDouble( $request, $date_from, $date_to, $customer_id);
+            $report = BingReport::getReportDouble($request, $date_from, $date_to, $customer_id);
             if($report === false){
                return array();
             }
