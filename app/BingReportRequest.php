@@ -2,23 +2,22 @@
 
 namespace App;
 
+use App\Api\AuthHelper;
+use App\BingReportingExampleHelper as ReportingExampleHelper;
+use App\BingReportRequestLibrary as ReportRequestLibrary;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-
-use SoapVar;
-use SoapFault;
-use Exception;
-// Specify the App\Api classes that will be used.
-use App\Api\AuthHelper;
-use App\BingReportRequestLibrary as ReportRequestLibrary;
-use App\BingReportingExampleHelper as ReportingExampleHelper;
-
-// Specify the Microsoft\BingAds\V12\Reporting classes that will be used.
-use Microsoft\BingAds\V12\Reporting\ReportRequestStatusType;
-
-// Specify the Microsoft\BingAds\Auth classes that will be used.
 use Microsoft\BingAds\Auth\ServiceClient;
 use Microsoft\BingAds\Auth\ServiceClientType;
+use Microsoft\BingAds\V12\Reporting\ReportRequestStatusType;
+use SoapFault;
+
+// Specify the App\Api classes that will be used.
+
+// Specify the Microsoft\BingAds\V12\Reporting classes that will be used.
+
+// Specify the Microsoft\BingAds\Auth classes that will be used.
 
 class BingReportRequest extends Model
 {
@@ -158,7 +157,7 @@ class BingReportRequest extends Model
             }
         }
     }
-    static public function getReportDouble(Request $request, $fromDate, $toDate, $CustomerID){
+    static public function getReportDouble(Request $request, $fromDate, $toDate, $CustomerID, $arbitrary = null){
 
         $GLOBALS['AuthorizationData'] = null;
         $GLOBALS['Proxy'] = null;
@@ -171,8 +170,12 @@ class BingReportRequest extends Model
 
 // Specify the file to download the report to. Because the file is
 // compressed use the .zip file extension.
+        if ($arbitrary == 1) {
+            $DownloadPath = public_path() . "/../app/ApiSources/double/bing/arbitrary/" . $CustomerID . ".zip";
+        } else {
+            $DownloadPath = public_path() . "/../app/ApiSources/double/bing/" . $CustomerID . ".zip";
+        }
 
-        $DownloadPath = public_path()."/../app/ApiSources/double/bing/".$CustomerID.".zip";
 
 // Confirm that the download folder exist; otherwise, exit.
 

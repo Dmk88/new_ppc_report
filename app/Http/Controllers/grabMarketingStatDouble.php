@@ -8,8 +8,12 @@ use App\GoogleSheet as Sheet;
 use Exception;
 use Google;
 use Google\AdsApi\AdWords\AdWordsSession;
+use Google\AdsApi\AdWords\AdWordsSessionBuilder;
+use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
 use Google\AdsApi\AdWords\Reporting\v201809\ReportDownloader;
 use Google\AdsApi\AdWords\ReportSettingsBuilder;
+use Google\AdsApi\Common\ConfigurationLoader;
+use Google\AdsApi\Common\OAuth2TokenBuilder;
 use Google_Service_Analytics;
 use Google_Service_AnalyticsReporting;
 use Google_Service_AnalyticsReporting_DateRange;
@@ -19,12 +23,6 @@ use Google_Service_AnalyticsReporting_DimensionFilterClause;
 use Google_Service_AnalyticsReporting_GetReportsRequest;
 use Google_Service_AnalyticsReporting_Metric;
 use Google_Service_AnalyticsReporting_ReportRequest;
-
-use Google\AdsApi\AdWords\AdWordsSessionBuilder;
-use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
-use Google\AdsApi\Common\ConfigurationLoader;
-use Google\AdsApi\Common\OAuth2TokenBuilder;
-
 use Google_Service_Sheets;
 use Illuminate\Http\Request;
 use ZipArchive;
@@ -95,7 +93,7 @@ class grabMarketingStatDouble extends Controller
 
 
 
-    public function getReportAdwords($customer_id, $during)
+    public function getReportAdwords($customer_id, $during, $arbitrary = null)
     {
         ini_set("max_execution_time", 0);
         $OAuth2TokenBuilder = new OAuth2TokenBuilder();
@@ -122,12 +120,21 @@ clientCustomerId = "' . $customer_id . '"
         $stringReport = self::getReport($session, $buildReportQuery, DownloadFormat::CSV);
         $arrayReport = explode(',', $stringReport);
 
-        file_put_contents(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv", $stringReport);
+
+        if ($arbitrary == 1) {
+            file_put_contents(public_path() . "/../app/ApiSources/double/adwords/arbitrary/" . $customer_id . ".csv", $stringReport);
+            $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/adwords/arbitrary/" . $customer_id . ".csv"));
+
+            $path = public_path() . "/../app/ApiSources/double/adwords/arbitrary/" . $customer_id . ".csv";
+
+        } else {
+            file_put_contents(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv", $stringReport);
+            $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv"));
+
+            $path = public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv";
+        }
 
 
-        $values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv"));
-
-        $path = public_path() . "/../app/ApiSources/double/adwords/" . $customer_id . ".csv";
         if (is_file($path)) {
             $reader = @fopen($path, "r");
             while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
@@ -268,31 +275,55 @@ clientCustomerId = "' . $customer_id . '"
 
         //$ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
         //$duringCurrent = date('Ym') . '01, ' . date('Ymd'); // This month
-
-        if (glob(public_path() . "/../app/ApiSources/double/bing/*")) {
-            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/bing/*"));
-        }
-
-        if (glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json")) {
-            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json"));
-        }
-
-        if (glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json")) {
-            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json"));
-        }
-
-        if (glob(public_path() . "/../app/ApiSources/double/adwords/*.csv")) {
-            array_map('unlink', glob(public_path() . "/../app/ApiSources/double/adwords/*.csv"));
-        }
-
-        foreach ($this->customers as $customer_id) {
-
-            if (in_array($customer_id, $this->customersBing)) {
-                $data = $this->grabBing($customer_id, $date_start, $date_end, $request);
-            } elseif (in_array($customer_id, $this->customersAdword)) {
-                $data = self::getReportAdwords($customer_id, $during);
+        if($ProcessingArbitary) {
+            if (glob(public_path() . "/../app/ApiSources/double/bing/arbitrary/*.*")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/bing/arbitrary/*.*"));
             }
 
+            if (glob(public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/*.json"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/*.json"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/double/adwords/arbitrary/*.csv")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/adwords/arbitrary/*.csv"));
+            }
+        }else{
+            if (glob(public_path() . "/../app/ApiSources/double/bing/*.*")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/bing/*.*"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/users/*.json"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/analytics/unique/*.json"));
+            }
+
+            if (glob(public_path() . "/../app/ApiSources/double/adwords/*.csv")) {
+                array_map('unlink', glob(public_path() . "/../app/ApiSources/double/adwords/*.csv"));
+            }
+        }
+        foreach ($this->customers as $customer_id) {
+            if($ProcessingArbitary) {
+                if (in_array($customer_id, $this->customersBing)) {
+                    $data = $this->grabBing($customer_id, $date_start, $date_end, $request, 1);
+                } elseif (in_array($customer_id, $this->customersAdword)) {
+                    $data = self::getReportAdwords($customer_id, $during, 1);
+                }
+            }else{
+                if (in_array($customer_id, $this->customersBing)) {
+                    $data = $this->grabBing($customer_id, $date_start, $date_end, $request);
+                } elseif (in_array($customer_id, $this->customersAdword)) {
+                    $data = self::getReportAdwords($customer_id, $during);
+                }
+            }
+
+            //var_dump($data);
 
             foreach ($data as $value => $item) {
                 if ($item['labels']) {
@@ -354,21 +385,40 @@ clientCustomerId = "' . $customer_id . '"
                     $dimension_name = '';
                     $report_name = '';
 
-                    if (in_array($customer_id, $this->customersAdword)) {
+                    if ($ProcessingArbitary) {
+                        if (in_array($customer_id, $this->customersAdword)) {
 
-                        $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/adwords.json";
-                        $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/adwords.json";
-                        $dimension_name = 'ga:adwordsCampaignID';
-                        $report_name = 'adwords';
+                            $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/adwords.json";
+                            $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/adwords.json";
+                            $dimension_name = 'ga:adwordsCampaignID';
+                            $report_name = 'adwords';
 
-                    } elseif (in_array($customer_id, $this->customersBing)) {
+                        } elseif (in_array($customer_id, $this->customersBing)) {
 
-                        $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/bing.json";
-                        $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/bing.json";
-                        $dimension_name = 'ga:dimension11';
-                        $report_name = 'bing';
+                            $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/bing.json";
+                            $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/bing.json";
+                            $dimension_name = 'ga:dimension11';
+                            $report_name = 'bing';
 
+                        }
+                    } else {
+                        if (in_array($customer_id, $this->customersAdword)) {
+
+                            $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/adwords.json";
+                            $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/adwords.json";
+                            $dimension_name = 'ga:adwordsCampaignID';
+                            $report_name = 'adwords';
+
+                        } elseif (in_array($customer_id, $this->customersBing)) {
+
+                            $DownloadPathEvents = public_path() . "/../app/ApiSources/double/analytics/unique/bing.json";
+                            $DownloadPathUsers = public_path() . "/../app/ApiSources/double/analytics/users/bing.json";
+                            $dimension_name = 'ga:dimension11';
+                            $report_name = 'bing';
+
+                        }
                     }
+
 
                     $events = 0;
                     $users = 0;
@@ -376,21 +426,20 @@ clientCustomerId = "' . $customer_id . '"
                         if ($ProcessingArbitary) {
                             if (!file_exists($DownloadPathEvents)) {
                                 $responseAnalyticsReport = self::getReportAnalyticsEvents($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                $eventsCamp = $this->getResultsAnalyticsUnique($responseAnalyticsReport, $camp, $report_name);
+                                $eventsCamp = $this->getResultsAnalyticsUnique($responseAnalyticsReport, $camp, $report_name, 1);
                             } else {
-                                $eventsCamp = $this->getResultsAnalyticsUniqueStatic($camp, $report_name);
+                                $eventsCamp = $this->getResultsAnalyticsUniqueStatic($camp, $report_name,1);
                             }
 
                             if (!file_exists($DownloadPathUsers)) {
                                 $responseAnalyticsReportUsers = self::getReportAnalyticsUsers($serviceAnalytics, $date_from, $date_to, $dimension_name);
-                                $usersCamp = $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $camp, $report_name);
+                                $usersCamp = $this->getResultsAnalyticsUsers($responseAnalyticsReportUsers, $camp, $report_name,1);
                             } else {
-                                $usersCamp = $this->getResultsAnalyticsUsersStatic($camp, $report_name);
+                                $usersCamp = $this->getResultsAnalyticsUsersStatic($camp, $report_name, 1);
                             }
                             $users += $usersCamp;
                             $events += $eventsCamp;
-                        } else
-                        {
+                        } else {
                             $date_from_this_month = date('Y-m-01');
                                $date_to_now = date('Y-m-d');
 
@@ -449,8 +498,12 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         Sheet::setToSheet($service, $spreadsheetId, $rangeLabel, $this->inputLabel);
-        $this->message .= "Processing complete successfull!<br>";
-        //Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);
+        if ($ProcessingArbitary) {
+            $this->message .= "Processing complete successfull!<br>";
+            //Sheet::setToSheet($service, $spreadsheetId, $rangeInputArbitary, $this->inputArbitary);
+        } else {
+            echo "Processing complete successfull!<br>";
+        }
 
     }
 
@@ -530,7 +583,7 @@ clientCustomerId = "' . $customer_id . '"
     }
 
 
-    public function getResultsAnalyticsUnique($reports, $compaign_id, $dimension_name)
+    public function getResultsAnalyticsUnique($reports, $compaign_id, $dimension_name, $arbitrary = null)
     {
         $arr = [];
         for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
@@ -552,7 +605,12 @@ clientCustomerId = "' . $customer_id . '"
             }
 
             $data = json_encode($arr);
-            file_put_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json", $data);
+            if($arbitrary == 1){
+                file_put_contents(public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/$dimension_name.json", $data);
+            }else{
+                file_put_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json", $data);
+            }
+
         }
 
         $events = null;
@@ -571,8 +629,13 @@ clientCustomerId = "' . $customer_id . '"
         return $events;
     }
 
-    public function getResultsAnalyticsUniqueStatic($compaign_id, $dimension_name){
-        $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json");
+    public function getResultsAnalyticsUniqueStatic($compaign_id, $dimension_name, $arbitrary = null){
+        if($arbitrary == 1){
+            $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/unique/arbitrary/$dimension_name.json");
+        }else{
+            $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/unique/$dimension_name.json");
+        }
+
         $arr = json_decode($json, true);
         $events = null;
         $compaign_id = explode(',', $compaign_id);
@@ -619,7 +682,7 @@ clientCustomerId = "' . $customer_id . '"
         return $analytics->reports->batchGet($body);
     }
 
-    public function getResultsAnalyticsUsers($reports, $compaign_id, $dimension_name)
+    public function getResultsAnalyticsUsers($reports, $compaign_id, $dimension_name, $arbitrary = null)
     {
         $arr = [];
         for ($reportIndex = 0; $reportIndex < count($reports); $reportIndex++) {
@@ -641,7 +704,12 @@ clientCustomerId = "' . $customer_id . '"
             }
 
             $data = json_encode($arr);
-            file_put_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json", $data);
+
+            if ($arbitrary == 1) {
+                file_put_contents(public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/$dimension_name.json", $data);
+            } else {
+                file_put_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json", $data);
+            }
         }
         $users = null;
         $compaign_id = explode(',', $compaign_id);
@@ -658,8 +726,13 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function getResultsAnalyticsUsersStatic($compaign_id, $dimension_name){
-        $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json");
+    public function getResultsAnalyticsUsersStatic($compaign_id, $dimension_name, $arbitrary = null){
+
+        if ($arbitrary == 1) {
+        $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/users/arbitrary/$dimension_name.json");
+        } else {
+            $json = file_get_contents(public_path() . "/../app/ApiSources/double/analytics/users/$dimension_name.json");
+        }
         $arr = json_decode($json, true);
         $users = null;
 
@@ -677,19 +750,40 @@ clientCustomerId = "' . $customer_id . '"
         return $users;
     }
 
-    public function grabBing($customer_id, $date_from = null, $date_to = null, Request $request)
+    public function grabBing($customer_id, $date_from = null, $date_to = null, Request $request, $arbitrary = null)
     {
+        if ($arbitrary == 1) {
+            $DownloadPath = public_path() . "/../app/ApiSources/double/bing/arbitrary/" . $customer_id . ".zip";
 
-        $DownloadPath = public_path() . "/../app/ApiSources/double/bing/" . $customer_id . ".zip";
-        if (!file_exists($DownloadPath)) {
-            $report = BingReport::getReportDouble($request, $date_from, $date_to, $customer_id);
-            if($report === false){
-               return array();
+            if (!file_exists($DownloadPath)) {
+                $report = BingReport::getReportDouble($request, $date_from, $date_to, $customer_id,1);
+                if ($report === false) {
+                    return array();
+                }
+            }
+
+        } else {
+            $DownloadPath = public_path() . "/../app/ApiSources/double/bing/" . $customer_id . ".zip";
+
+            if (!file_exists($DownloadPath)) {
+                $report = BingReport::getReportDouble($request, $date_from, $date_to, $customer_id);
+                if ($report === false) {
+                    return array();
+                }
             }
         }
 
+
+
+
+
         if (file_exists($DownloadPath)) {
-            $filePath = $this->extractFile($DownloadPath);
+            if($arbitrary == 1) {
+                $filePath = $this->extractFile($DownloadPath, 1);
+                //var_dump($filePath);
+            } else {
+                $filePath = $this->extractFile($DownloadPath);
+            }
 
             if (is_file($filePath)) {
                 $reader = @fopen($filePath, "r");
@@ -794,14 +888,21 @@ clientCustomerId = "' . $customer_id . '"
 
     }
 
-    public function extractFile($path)
+    public function extractFile($path, $arbitrary = null)
     {
         $archive = new ZipArchive();
 
         if ($archive->open($path) === TRUE) {
-            $archive->extractTo(public_path() . "/../app/ApiSources/double/bing/");
-            $return = public_path() . "/../app/ApiSources/double/bing/" . $archive->statIndex(0)['name'];
-            $archive->close();
+            if($arbitrary == 1){
+                $archive->extractTo(public_path() . "/../app/ApiSources/double/bing/arbitrary/");
+                $return = public_path() . "/../app/ApiSources/double/bing/arbitrary/" . $archive->statIndex(0)['name'];
+                $archive->close();
+            }else{
+                $archive->extractTo(public_path() . "/../app/ApiSources/double/bing/");
+                $return = public_path() . "/../app/ApiSources/double/bing/" . $archive->statIndex(0)['name'];
+                $archive->close();
+            }
+
         } else {
             throw new Exception ("Decompress operation from ZIP file failed.");
         }
