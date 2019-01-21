@@ -188,6 +188,9 @@ clientCustomerId = "' . $customer_id . '"
                             case 4:
                                 $row7[4] = $row1;
                                 break;
+                            case 5:
+                                $row7[5] = $row1;
+                                break;
                         }
                         ksort($row7);
                     }
@@ -268,10 +271,10 @@ clientCustomerId = "' . $customer_id . '"
         }
 
         $rangeInputArbitary = $CurrentSheet . '!H4:W';
-        $rangeLabel = $CurrentSheet . '!A4:W';
+        $rangeLabel = $CurrentSheet . '!A4:AD';
         $rangeArbitaryFrom = $CurrentSheet . '!' . 'E2';
         $rangeArbitaryTo = $CurrentSheet . '!' . 'F2';
-        $rangeFromCurrent = $CurrentSheet . '!' . 'K2';
+        $rangeFromCurrent = $CurrentSheet . '!' . 'L2';
 
         //$ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
         //$duringCurrent = date('Ym') . '01, ' . date('Ymd'); // This month
@@ -364,6 +367,11 @@ clientCustomerId = "' . $customer_id . '"
                     } else {
                         $lab4 = ' - ';
                     }
+                    if (array_key_exists(5, $item['labels'])) {
+                        $lab5 = $item['labels'][5];
+                    } else {
+                        $lab5 = ' - ';
+                    }
                     $customer_name = '';
                     if($customer_id == '2682652198' || $customer_id == '858558'){
                         $customer_name = 'altoroslabs.com';
@@ -378,7 +386,7 @@ clientCustomerId = "' . $customer_id . '"
                         $source = 'Bing';
                     }
 
-                    $array_of_values = array($customer_id,$customer_name, $source, $lab1, $lab2, $lab3, $lab4, $Impressions, $Click, $Cost, $Conversion);
+                    $array_of_values = array($customer_id,$customer_name, $source, $lab1, $lab2, $lab3, $lab4, $lab5, $Impressions, $Click, $Cost, $Conversion);
 
                     $DownloadPathEvents = '';
                     $DownloadPathUsers = '';
@@ -478,13 +486,15 @@ clientCustomerId = "' . $customer_id . '"
         }
 //var_dump($this->inputLabel);
 
-        $this->inputLabel = $this->array_msort($this->inputLabel, array('2' =>SORT_ASC, '3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
+        $this->inputLabel = $this->array_msort($this->inputLabel, array('1' =>SORT_DESC, '2' =>SORT_ASC, '3'=>SORT_ASC, '4'=>SORT_ASC, '5'=>SORT_ASC));
         $this->inputLabel = array_values($this->inputLabel);
 
 //var_dump($this->inputLabel);
+//$array = json_encode($this->inputLabel);
+//file_put_contents(public_path() . "/../app/ApiSources/double/analytics/unique/array.json", $array);
 
                 Sheet::deletePreviousValues($service, $spreadsheetId, $rangeLabel);
-        Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
+        //Sheet::deletePreviousValues($service, $spreadsheetId, $rangeInputArbitary);
 
         if($ProcessingArbitary){
             Sheet::setToSheet($service, $spreadsheetId, $rangeArbitaryFrom, array(array(date("F j, Y", strtotime($date_from)))));
@@ -843,6 +853,9 @@ clientCustomerId = "' . $customer_id . '"
                                     break;
                                 case 4:
                                     $row7[4] = $row1;
+                                    break;
+                                case 5:
+                                    $row7[5] = $row1;
                                     break;
                             }
                             ksort($row7);
