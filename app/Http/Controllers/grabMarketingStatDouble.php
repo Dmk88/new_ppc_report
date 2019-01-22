@@ -11,6 +11,7 @@ use Google\AdsApi\AdWords\AdWordsSession;
 use Google\AdsApi\AdWords\AdWordsSessionBuilder;
 use Google\AdsApi\AdWords\Reporting\v201809\DownloadFormat;
 use Google\AdsApi\AdWords\Reporting\v201809\ReportDownloader;
+use Google\AdsApi\AdWords\Reporting\v201809\RequestOptionsFactory;
 use Google\AdsApi\AdWords\ReportSettingsBuilder;
 use Google\AdsApi\Common\ConfigurationLoader;
 use Google\AdsApi\Common\OAuth2TokenBuilder;
@@ -60,7 +61,8 @@ class grabMarketingStatDouble extends Controller
                 }
             }
             //var_dump($data);
-            self::grab($data['date-from'], $data['date-to'], $request);
+
+                self::grab($data['date-from'], $data['date-to'], $request);
 
         } catch (Exception $e) {
             dd($e);
@@ -77,8 +79,14 @@ class grabMarketingStatDouble extends Controller
 
     public static function getReport(AdWordsSession $session, $reportQuery, $reportFormat)
     {
+        $options = [
+            'stream_context' => [
+                'http' => ['timeout' => 600]
+            ]
+        ];
+        $requestOptionsFactory = new RequestOptionsFactory($session, $options);
         // Download report as a string.
-        $reportDownloader = new ReportDownloader($session);
+        $reportDownloader = new ReportDownloader($session, $requestOptionsFactory);
         // Optional: If you need to adjust report settings just for this one
         // request, you can create and supply the settings override here. Otherwise,
         // default values from the configuration file (adsapi_php.ini) are used.
@@ -233,6 +241,15 @@ clientCustomerId = "' . $customer_id . '"
 
     public function grab($date_from = Null, $date_to = Null, Request $request)
     {
+        $lock = fopen(public_path() . "/../app/ApiSources/double/lock.txt", 'a');
+        if ( !($lock && flock($lock, LOCK_EX | LOCK_NB)) ) {
+            $this->message .= "Script is already running. Please, try again later(in 5 minutes)!<br>";
+            exit($this->message);
+        }
+
+        fwrite($lock, "\n" . date('Y-m-d H:i:s') . ' running' ."\n");
+
+
         ini_set("max_execution_time", 0);
         $default = [
             'APPLICATION_NAME' => 'Google API',
@@ -515,6 +532,9 @@ clientCustomerId = "' . $customer_id . '"
             echo "Processing complete successfull!<br>";
         }
 
+        fwrite($lock, date('Y-m-d H:i:s') . ' complete' ."\n" ."\n");
+        fclose($lock);
+
     }
 
     private function array_msort($array, $cols)
@@ -782,9 +802,6 @@ clientCustomerId = "' . $customer_id . '"
                 }
             }
         }
-
-
-
 
 
         if (file_exists($DownloadPath)) {
