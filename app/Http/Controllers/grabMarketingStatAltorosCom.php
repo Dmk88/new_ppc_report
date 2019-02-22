@@ -568,7 +568,7 @@ clientCustomerId = "' . $customer_id . '"
         $dimensionFilter = new Google_Service_AnalyticsReporting_DimensionFilter();
         $dimensionFilter->setDimensionName('ga:eventAction');
         $dimensionFilter->setOperator('EXACT');
-        $dimensionFilter->setExpressions(array('More than 30 seconds'));
+        $dimensionFilter->setExpressions(array('More than 30 sec'));
 
 // Create the DimensionFilterClauses
         $dimensionFilterClause = new Google_Service_AnalyticsReporting_DimensionFilterClause();
