@@ -40,9 +40,9 @@ class grabMarketingStatDouble extends Controller
     public $inputArbitary = [];
     public $inputLabel = [];
     public $message = '';
-    public $customers = [2682652198, 8826845921, 858558, 17182159];
+    public $customers = [2682652198, 8826845921, 3112040897, 858558, 17182159];
     public $customersBing = [858558, 17182159];
-    public $customersAdword = [2682652198, 8826845921];
+    public $customersAdword = [2682652198, 8826845921, 3112040897];
 
     public function get(Request $request)
     {
@@ -390,11 +390,14 @@ clientCustomerId = "' . $customer_id . '"
                         $lab5 = ' - ';
                     }
                     $customer_name = '';
-                    if($customer_id == '2682652198' || $customer_id == '858558'){
+                    if ($customer_id == '2682652198' || $customer_id == '858558') {
                         $customer_name = 'altoroslabs.com';
 
-                    }elseif($customer_id == '8826845921' || $customer_id == '17182159'){
+                    } elseif ($customer_id == '8826845921' || $customer_id == '17182159') {
                         $customer_name = 'altoros.no';
+
+                    } elseif ($customer_id == '3112040897') {
+                        $customer_name = 'altoros.fi';
                     }
                     $source = '';
                     if (in_array($customer_id, $this->customersAdword)) {

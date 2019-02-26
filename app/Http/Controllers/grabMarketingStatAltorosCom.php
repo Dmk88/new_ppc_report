@@ -336,7 +336,7 @@ clientCustomerId = "' . $customer_id . '"
             foreach ($data as $value => $item) {
                 if ($item['labels']) {
                     $Click = $item['clicks'];
-                    $Cost = $item['cost'] / 1000000;
+                    $Cost = round($item['cost'] / 1000000, 2);
 
                     $Conversion = $item['conversions'];
                     $Impressions = $item['impressions'];
