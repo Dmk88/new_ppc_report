@@ -541,7 +541,7 @@ clientCustomerId = "' . $customer_id . '"
     public static function getReportAnalyticsEvents(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
     {
         // Replace with your view ID, for example XXXX.
-        $VIEW_ID = "175032628";
+        $VIEW_ID = "101383010";
 
         // Create the DateRange object.
         $dateRange = new Google_Service_AnalyticsReporting_DateRange();
@@ -662,7 +662,7 @@ clientCustomerId = "' . $customer_id . '"
     public static function getReportAnalyticsUsers(Google_Service_AnalyticsReporting $analytics, $date_from, $date_to, $dimension_name)
     {
         // Replace with your view ID, for example XXXX.
-        $VIEW_ID = "175032628";
+        $VIEW_ID = "101383010";
 
         // Create the DateRange object.
         $dateRange = new Google_Service_AnalyticsReporting_DateRange();
