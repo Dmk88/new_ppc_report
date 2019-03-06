@@ -117,7 +117,7 @@ clientCustomerId = "' . $customer_id . '"
         $session = (new AdWordsSessionBuilder())->from($configurationLoader->fromString($config))->withOAuth2Credential($oAuth2Credential)->build();
 
         // Create report query
-        $buildReportQuery = 'SELECT CampaignId, '
+        $buildReportQuery = 'SELECT CampaignId, CampaignName,'
             . 'Clicks, Impressions, Cost, AllConversionValue, LabelIds, Labels FROM CAMPAIGN_PERFORMANCE_REPORT DURING %s';
         $buildReportQuery = sprintf($buildReportQuery, $during);
 
@@ -137,16 +137,17 @@ clientCustomerId = "' . $customer_id . '"
 
             $path = public_path() . "/../app/ApiSources/altoroscom/adwords/" . $customer_id . ".csv";
         }
-
-
+        //$values = array_map('str_getcsv', file(public_path() . "/../app/ApiSources/altoroscom/adwords/arbitrary/" . $customer_id . ".csv"));
+        //$path = public_path() . "/../app/ApiSources/altoroscom/adwords/arbitrary/" . $customer_id . ".csv";
         if (is_file($path)) {
             $reader = @fopen($path, "r");
             while (($row = fgetcsv($reader, 10000, ",")) !== FALSE) {
                 if ($row[0] == 'Campaign ID' &&
-                    $row[1] == 'Clicks' &&
-                    $row[2] == 'Impressions' &&
-                    $row[3] == 'Cost' &&
-                    $row[6] == 'Labels') {
+                    $row[1] == 'Campaign' &&
+                    $row[2] == 'Clicks' &&
+                    $row[3] == 'Impressions' &&
+                    $row[4] == 'Cost' &&
+                    $row[7] == 'Labels') {
                     break;
                 }
             }
@@ -156,7 +157,8 @@ clientCustomerId = "' . $customer_id . '"
                     isset($row[1]) &&
                     isset($row[2]) &&
                     isset($row[3]) &&
-                    isset($row[6])
+                    isset($row[4]) &&
+                    isset($row[7])
                 ) {
 
                     if (!isset($data[$row[0]])) {
@@ -166,15 +168,17 @@ clientCustomerId = "' . $customer_id . '"
                         $data[$row[0]]['impressions'] = 0;
                         $data[$row[0]]['labels'] = 0;
                         $data[$row[0]]['campaigns'] = 0;
+                        $data[$row[0]]['campaigns_name'] = '';
                     }
-                    $data[$row[0]]['clicks'] += $row[1];
-                    $data[$row[0]]['impressions'] += $row[2];
-                    $data[$row[0]]['cost'] += $row[3];
-                    $data[$row[0]]['conversions'] += $row[4];
+                    $data[$row[0]]['clicks'] += $row[2];
+                    $data[$row[0]]['impressions'] += $row[3];
+                    $data[$row[0]]['cost'] += $row[4];
+                    $data[$row[0]]['conversions'] += $row[5];
 
                     $data[$row[0]]['campaigns'] += $row[0];
+                    $data[$row[0]]['campaigns_name'] = $row[1];
 
-                    $row6 = explode('","', trim($row[6], '"[]'));
+                    $row6 = explode('","', trim($row[7], '"[]'));
                     $row7 = [];
                     foreach ($row6 as $row1) {
 
@@ -223,16 +227,20 @@ clientCustomerId = "' . $customer_id . '"
                             $data[$key]['impressions'] += $value_res['impressions'];
 
                             $data[$key]['campaigns'][] += $value_res['campaigns'];
+                            $data[$key]['campaigns_name'] .=  '; ' . $value_res['campaigns_name'] ;
+
                         }
                     }
                 }
                 sort($data[$key]['campaigns']);
+                $campaigns_name =  explode('; ',$data[$key]['campaigns_name']);
+                $data[$key]['campaigns_name'] = $campaigns_name;
+                sort($data[$key]['campaigns_name']);
 
             }
 
 
             $arrayResult = array_unique($data, SORT_REGULAR);
-
             return $arrayResult;
         }
 
@@ -270,6 +278,7 @@ clientCustomerId = "' . $customer_id . '"
 
         //get ranges of input
         $spreadsheetId = '1jynNGLB8thxGrmWgqyK3_w8XFY9CdBpjeKdWx_feYLM';
+        //$spreadsheetId = '1Kmzh51JHpxUTUpq0in-tHA86lTXEhggHIom_rl7T8sk'; //test
 
         $ProcessingArbitary = isset($date_from) && !empty($date_from) && isset($date_to) && !empty($date_to) ? true : false;
 
@@ -341,6 +350,7 @@ clientCustomerId = "' . $customer_id . '"
                     $Conversion = $item['conversions'];
                     $Impressions = $item['impressions'];
                     $Campaigns = $item['campaigns'];
+                    $Campaigns_name = $item['campaigns_name'];
                     /*$Campaigns = '';
                     foreach($item['campaigns'] as &$campaign){
 
@@ -463,7 +473,7 @@ clientCustomerId = "' . $customer_id . '"
                     array_push($array_of_values, $events);
                     array_push($array_of_values, $users);
 
-                    foreach ($Campaigns as &$camp) {
+                    foreach ($Campaigns_name as &$camp) {
                         array_push($array_of_values, $camp);
                     }
 
