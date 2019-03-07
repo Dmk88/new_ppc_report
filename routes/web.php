@@ -64,3 +64,6 @@ Route::get('/marketing_stat_altoroscom', 'grabMarketingStatAltorosCom@index');
 Route::post('/marketing_stat_altoroscom', 'grabMarketingStatAltorosCom@get');
 
 Route::get('/grab_marketing_stat_altoroscom/', 'grabMarketingStatAltorosCom@grab');
+
+Route::get('/grab_adwords_data/', 'grabAdwordsData@grab');
+Route::get('/grab_adwords_data_adgroup/', 'grabAdwordsData@getReportAdwordsAdGroup');
