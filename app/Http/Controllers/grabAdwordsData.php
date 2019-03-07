@@ -160,7 +160,7 @@ clientCustomerId = "' . $customer_id . '"
             );
         } while ($selector->getPaging()->getStartIndex() < $totalNumEntries);
 
-        var_dump($campaigns_all);
+        return $campaigns_all;
 
     }
 
@@ -187,6 +187,7 @@ clientCustomerId = "' . $customer_id . '"
         $serviceAnalytics = new Google_Service_AnalyticsReporting($client->client);
 
         $spreadsheetId = '1Kmzh51JHpxUTUpq0in-tHA86lTXEhggHIom_rl7T8sk'; //test
+        //$spreadsheetId = '1iYsK6a3OONNS9dTIYC5i4Jkof52ieCsCz2VrUljFxn8'; //надо выгружать в этот спредшит
 
         $range = 'AdwordsCampaigns!A2:C';
         $array = array();
@@ -194,8 +195,20 @@ clientCustomerId = "' . $customer_id . '"
             array_push($array, $this->getReportAdwords($customer));
         }
         $campaign_all = array();
-$campaign_all = array_merge($array[0], $array[1], $array[2], $array[3]);
+        $campaign_all = array_merge($array[0], $array[1], $array[2], $array[3]);
         //var_dump($campaign_all);
         Sheet::setToSheet($service, $spreadsheetId, $range, $campaign_all);
+
+
+        $rangeAdGroup = 'AdwordsAdGroups!A2:E';
+        $arrayAdgroup = array();
+        foreach($this->customersAdword as &$customer){
+            array_push($arrayAdgroup, $this->getReportAdwordsAdGroup($customer));
+        }
+        $adgroups_all = array();
+        $adgroups_all = array_merge($arrayAdgroup[0], $arrayAdgroup[1], $arrayAdgroup[2], $arrayAdgroup[3]);
+        //var_dump($campaign_all);
+        Sheet::setToSheet($service, $spreadsheetId, $rangeAdGroup, $adgroups_all);
+
     }
 }
